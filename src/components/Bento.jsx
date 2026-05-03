@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
+import StoryViewer from './StoryViewer'
 
 function ActionBar() {
   const actions = [
@@ -27,6 +28,7 @@ function ActionBar() {
       {actions.map(({ icon, label }) => (
         <button
           key={label}
+          onClick={e => e.stopPropagation()}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -55,68 +57,136 @@ function ActionBar() {
   )
 }
 
-function DailyStatus({ theme }) {
+function DailyStatus({ theme, onClick, hasUnseen }) {
   const isDark = theme === 'dark'
 
   return (
-    <div style={{
-      position: 'relative',
-      width: '100%',
-      height: '100%',
-      borderRadius: '16px',
-      overflow: 'hidden',
-      background: isDark
-        ? 'linear-gradient(135deg, #1A1A1A 0%, #2a1a3e 100%)'
-        : 'linear-gradient(135deg, #E5FADC 0%, #CFAAFA 100%)',
-      border: `1px solid ${isDark
-        ? 'rgba(243,243,243,0.08)'
-        : 'rgba(110,1,240,0.1)'}`,
-    }}>
-      <div style={{
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative',
         width: '100%',
         height: '100%',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: `1px solid ${isDark
+          ? 'rgba(243,243,243,0.08)'
+          : 'rgba(110,1,240,0.1)'}`,
+        cursor: 'pointer',
+      }}
+    >
+      {/* Blurred preview image */}
+      <img
+        src="/story-1.png"
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          filter: 'blur(12px)',
+          transform: 'scale(1.1)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      />
+
+      {/* Dark overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(0,0,0,0.45)',
+      }} />
+
+      {/* Center play button */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '12px',
       }}>
-        <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '52px',
+          height: '52px',
+          borderRadius: '50%',
+          background: 'rgba(110,1,240,0.5)',
+          border: '1.5px solid rgba(243,243,243,0.3)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            background: 'rgba(110,1,240,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 12px',
-          }}>
+            width: 0,
+            height: 0,
+            borderTop: '9px solid transparent',
+            borderBottom: '9px solid transparent',
+            borderLeft: '16px solid #F3F3F3',
+            marginLeft: '4px',
+          }} />
+        </div>
+
+        <p style={{
+          color: 'rgba(243,243,243,0.8)',
+          fontSize: '13px',
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: '500',
+          margin: 0,
+          letterSpacing: '0.3px',
+        }}>
+          Daily Status
+        </p>
+      </div>
+
+      {/* Green dot — unseen indicator */}
+      {hasUnseen && (
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(97,222,44,0.3)',
+          borderRadius: '20px',
+          padding: '4px 10px 4px 6px',
+          zIndex: 2,
+        }}>
+          {/* Pulsing dot */}
+          <div style={{ position: 'relative', width: '8px', height: '8px' }}>
             <div style={{
-              width: 0,
-              height: 0,
-              borderTop: '8px solid transparent',
-              borderBottom: '8px solid transparent',
-              borderLeft: '14px solid #F3F3F3',
-              marginLeft: '3px',
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              background: '#61DE2C',
+              animation: 'pulse 2s ease-in-out infinite',
             }} />
           </div>
-          <p style={{
-            color: isDark
-              ? 'rgba(243,243,243,0.4)'
-              : 'rgba(18,15,15,0.4)',
-            fontSize: '13px',
+          <span style={{
+            color: '#61DE2C',
+            fontSize: '11px',
             fontFamily: 'Inter, sans-serif',
+            fontWeight: '600',
+            letterSpacing: '0.3px',
           }}>
-            Daily Status
-          </p>
+            New
+          </span>
         </div>
-      </div>
+      )}
 
       <ActionBar />
     </div>
   )
 }
 
-function GridCard({ label, theme, fullHeight }) {
+function GridCard({ label, theme }) {
   const isDark = theme === 'dark'
 
   const accents = {
@@ -132,9 +202,7 @@ function GridCard({ label, theme, fullHeight }) {
   return (
     <div
       style={{
-        width: '100%',
-        height: fullHeight ? '100%' : 'auto',
-        flex: fullHeight ? 1 : undefined,
+        flex: 1,
         borderRadius: '16px',
         background: isDark
           ? 'rgba(243,243,243,0.04)'
@@ -226,7 +294,21 @@ function FloatingChat() {
 export default function Bento() {
   const { theme } = useTheme()
   const [isMobile, setIsMobile] = useState(true)
+  const [storyOpen, setStoryOpen] = useState(false)
   const [bentoHeight, setBentoHeight] = useState('calc(100dvh - 120px)')
+  const [hasUnseen, setHasUnseen] = useState(false)
+
+useEffect(() => {
+  const seen = localStorage.getItem('cka-stories-seen')
+  if (!seen) setHasUnseen(true)
+}, [])
+
+const handleOpenStory = () => {
+  setStoryOpen(true)
+  setHasUnseen(false)
+  localStorage.setItem('cka-stories-seen', 'true')
+}
+
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 1023px)')
@@ -252,6 +334,10 @@ export default function Bento() {
   if (isMobile) {
     return (
       <>
+        {storyOpen && (
+          <StoryViewer onClose={() => setStoryOpen(false)} />
+        )}
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -260,12 +346,14 @@ export default function Bento() {
           gap: '10px',
           overflow: 'hidden',
         }}>
-          {/* Daily Status — takes more space */}
           <div style={{ flex: '0 0 55%', minHeight: 0 }}>
-            <DailyStatus theme={theme} />
+            <DailyStatus
+              theme={theme}
+              onClick={handleOpenStory}
+              hasUnseen={hasUnseen}
+            />
           </div>
 
-          {/* 2x2 grid */}
           <div style={{
             flex: 1,
             display: 'grid',
@@ -287,6 +375,10 @@ export default function Bento() {
 
   return (
     <>
+      {storyOpen && (
+        <StoryViewer onClose={() => setStoryOpen(false)} />
+      )}
+
       <div style={{
         display: 'flex',
         height: bentoHeight,
@@ -294,15 +386,13 @@ export default function Bento() {
         gap: '12px',
         overflow: 'hidden',
       }}>
-        {/* Left — Daily Status */}
-        <div style={{
-          flex: '0 0 45%',
-          minHeight: 0,
-        }}>
-          <DailyStatus theme={theme} />
+        <div style={{ flex: '0 0 45%', minHeight: 0 }}>
+          <DailyStatus
+            theme={theme}
+            onClick={() => setStoryOpen(true)}
+          />
         </div>
 
-        {/* Right — 3 stacked */}
         <div style={{
           flex: 1,
           display: 'flex',

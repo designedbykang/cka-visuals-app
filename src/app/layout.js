@@ -10,6 +10,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+      <meta name="theme-color" content="#6E01F0" />
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {

@@ -98,8 +98,8 @@ export default function StatusUploadSheet({ onClose, onSuccess }) {
       onClose()
 
     } catch (err) {
-      console.error(err)
-      setError('Something went wrong. Try again.')
+      console.error('Full error:', err)
+      setError(err.message || 'Upload failed. Check connection and try again.')
     } finally {
       setLoading(false)
     }

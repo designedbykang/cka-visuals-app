@@ -12,13 +12,53 @@ export function AdminProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const resetAuthState = () => {
+      setUser(null)
+      setIsAdmin(false)
+      setEditMode(false)
+    }
+
+    const isInvalidRefreshTokenError = (error) => {
+      if (!error?.message) return false
+      return (
+        error.message.includes('Invalid Refresh Token') ||
+        error.message.includes('Refresh Token Not Found')
+      )
+    }
+
+    const clearBrokenSession = async () => {
+      try {
+        // Clear client-side tokens so auth can recover without retry loops.
+        await supabase.auth.signOut({ scope: 'local' })
+      } catch {
+        // Ignore cleanup errors; local auth state is reset below.
+      }
+      resetAuthState()
+    }
+
     // Check existing session on load
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        await loadProfile(session.user)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          if (isInvalidRefreshTokenError(error)) {
+            await clearBrokenSession()
+            return
+          }
+          throw error
+        }
+
+        if (session) {
+          await loadProfile(session.user)
+        } else {
+          resetAuthState()
+        }
+      } catch (error) {
+        console.error('Failed to restore auth session:', error)
+        resetAuthState()
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     checkSession()
@@ -29,9 +69,7 @@ export function AdminProvider({ children }) {
         if (session) {
           await loadProfile(session.user)
         } else {
-          setUser(null)
-          setIsAdmin(false)
-          setEditMode(false)
+          resetAuthState()
         }
       }
     )

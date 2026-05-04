@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
+import { useAdmin } from '@/context/AdminContext'
+import StatusUploadSheet from './StatusUploadSheet'
+import { Plus } from 'lucide-react'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
 import StoryViewer from './StoryViewer'
 
@@ -59,6 +62,28 @@ function ActionBar() {
 
 function DailyStatus({ theme, onClick, hasUnseen }) {
   const isDark = theme === 'dark'
+  const [slideIndex, setSlideIndex] = useState(0)
+  const [fading, setFading] = useState(false)
+
+  const slides = [
+    '/story-1.png',
+    '/story-2.png',
+    '/story-3.png',
+    '/story-4.png',
+    '/story-5.png',
+  ]
+
+  // Auto slideshow
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFading(true)
+      setTimeout(() => {
+        setSlideIndex(i => (i + 1) % slides.length)
+        setFading(false)
+      }, 600)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div
@@ -75,9 +100,10 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         cursor: 'pointer',
       }}
     >
-      {/* Blurred preview image */}
+      {/* Slideshow background */}
       <img
-        src="/story-1.png"
+        key={slideIndex}
+        src={slides[slideIndex]}
         alt=""
         draggable={false}
         style={{
@@ -86,62 +112,46 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          filter: 'blur(12px)',
-          transform: 'scale(1.1)',
+          filter: 'blur(10px)',
+          transform: 'scale(1.12)',
           pointerEvents: 'none',
           userSelect: 'none',
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 0.6s ease',
         }}
       />
 
-      {/* Dark overlay */}
+      {/* Liquid glass overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'rgba(0,0,0,0.45)',
+        background: isDark
+          ? 'rgba(0,0,0,0.35)'
+          : 'rgba(255,255,255,0.15)',
+        backdropFilter: 'blur(0px)',
       }} />
 
-      {/* Center play button */}
+      {/* Glass shimmer layer */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-      }}>
-        <div style={{
-          width: '52px',
-          height: '52px',
-          borderRadius: '50%',
-          background: 'rgba(110,1,240,0.5)',
-          border: '1.5px solid rgba(243,243,243,0.3)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            width: 0,
-            height: 0,
-            borderTop: '9px solid transparent',
-            borderBottom: '9px solid transparent',
-            borderLeft: '16px solid #F3F3F3',
-            marginLeft: '4px',
-          }} />
-        </div>
+        background: `linear-gradient(
+          135deg,
+          rgba(255,255,255,0.08) 0%,
+          rgba(255,255,255,0.03) 40%,
+          rgba(110,1,240,0.08) 100%
+        )`,
+      }} />
 
-        <p style={{
-          color: 'rgba(243,243,243,0.8)',
-          fontSize: '13px',
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: '500',
-          margin: 0,
-          letterSpacing: '0.3px',
-        }}>
-          Daily Status
-        </p>
-      </div>
+      {/* Top edge bevel */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '10%',
+        right: '10%',
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+      }} />
 
       {/* Green dot — unseen indicator */}
       {hasUnseen && (
@@ -159,7 +169,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
           padding: '4px 10px 4px 6px',
           zIndex: 2,
         }}>
-          {/* Pulsing dot */}
           <div style={{ position: 'relative', width: '8px', height: '8px' }}>
             <div style={{
               position: 'absolute',
@@ -295,6 +304,8 @@ export default function Bento() {
   const { theme } = useTheme()
   const [isMobile, setIsMobile] = useState(true)
   const [storyOpen, setStoryOpen] = useState(false)
+  const { isAdmin } = useAdmin()
+const [uploadOpen, setUploadOpen] = useState(false)
   const [bentoHeight, setBentoHeight] = useState('calc(100dvh - 120px)')
   const [hasUnseen, setHasUnseen] = useState(false)
 
@@ -346,14 +357,42 @@ const handleOpenStory = () => {
           gap: '10px',
           overflow: 'hidden',
         }}>
-          <div style={{ flex: '0 0 55%', minHeight: 0 }}>
-            <DailyStatus
-              theme={theme}
-              onClick={handleOpenStory}
-              hasUnseen={hasUnseen}
-            />
-          </div>
+    
+    <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
+    <DailyStatus
+    theme={theme}
+    onClick={() => setStoryOpen(true)}
+    hasUnseen={hasUnseen}
+  />
 
+  {/* Admin upload button */}
+  {isAdmin && (
+    <button
+      onClick={e => {
+        e.stopPropagation()
+        setUploadOpen(true)
+      }}
+      style={{
+        position: 'absolute',
+        top: '12px',
+        left: '12px',
+        width: '36px',
+        height: '36px',
+        borderRadius: '10px',
+        background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
+        border: '1px solid rgba(243,243,243,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        zIndex: 3,
+        boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
+      }}
+    >
+      <Plus size={18} color="#F3F3F3" />
+    </button>
+  )}
+</div>
           <div style={{
             flex: 1,
             display: 'grid',
@@ -386,25 +425,64 @@ const handleOpenStory = () => {
         gap: '12px',
         overflow: 'hidden',
       }}>
-        <div style={{ flex: '0 0 45%', minHeight: 0 }}>
-          <DailyStatus
-            theme={theme}
-            onClick={() => setStoryOpen(true)}
-          />
+<div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
+  <DailyStatus
+    theme={theme}
+    onClick={() => setStoryOpen(true)}
+    hasUnseen={hasUnseen}
+  />
+
+  {/* Admin upload button */}
+  {isAdmin && (
+    <button
+      onClick={e => {
+        e.stopPropagation()
+        setUploadOpen(true)
+      }}
+      style={{
+        position: 'absolute',
+        top: '12px',
+        left: '12px',
+        width: '36px',
+        height: '36px',
+        borderRadius: '10px',
+        background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
+        border: '1px solid rgba(243,243,243,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        zIndex: 3,
+        boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
+      }}
+    >
+      <Plus size={18} color="#F3F3F3" />
+    </button>
+  )}
+</div>
+          <div style={{
+            flex: 1,
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+            gap: '10px',
+            minHeight: 0,
+          }}>
+            {['Services', 'Portfolio', 'Content', 'Portal'].map(label => (
+              <GridCard key={label} label={label} theme={theme} />
+            ))}
+          </div>
         </div>
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          minHeight: 0,
-        }}>
-          {['Services', 'Portfolio', 'Content'].map(label => (
-            <GridCard key={label} label={label} theme={theme} fullHeight />
-          ))}
-        </div>
-      </div>
+        {uploadOpen && (
+  <StatusUploadSheet
+    onClose={() => setUploadOpen(false)}
+    onSuccess={() => {
+      setHasUnseen(true)
+      localStorage.removeItem('cka-stories-seen')
+    }}
+  />
+)}
 
       <FloatingChat />
     </>

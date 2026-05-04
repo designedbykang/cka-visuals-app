@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAdmin } from '@/context/AdminContext'
+import LoginSheet from './LoginSheet'
 import { useTheme } from '@/context/ThemeContext'
 import {
   Menu, X, LayoutGrid, Grid3x3, Store, Link,
@@ -207,61 +209,97 @@ function DesktopGridButton({ onToggle }) {
 }
 
 function Avatar() {
+  const { isAdmin } = useAdmin()
+  const [loginOpen, setLoginOpen] = useState(false)
+  let pressTimer = null
+
+  const handlePressStart = () => {
+    pressTimer = setTimeout(() => {
+      setLoginOpen(true)
+    }, 600)
+  }
+
+  const handlePressEnd = () => {
+    clearTimeout(pressTimer)
+  }
+
   return (
-    <button style={{
-      width: '44px',
-      height: '44px',
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      padding: 0,
-      flexShrink: 0,
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      {/* Rotating gradient ring */}
-      <div style={{
-        position: 'absolute',
-        width: '44px',
-        height: '44px',
-        borderRadius: '50%',
-        background: 'conic-gradient(#61DE2C, #9E56F5,rgb(79, 228, 196), #61DE2C)',
-        animation: 'spin 3s linear infinite',
-      }} />
+    <>
+      <button
+        onMouseDown={handlePressStart}
+        onMouseUp={handlePressEnd}
+        onTouchStart={handlePressStart}
+        onTouchEnd={handlePressEnd}
+        style={{
+          width: '44px',
+          height: '44px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 0,
+          flexShrink: 0,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Rotating gradient ring */}
+        <div style={{
+          position: 'absolute',
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          background: isAdmin
+            ? 'conic-gradient(#61DE2C, #61DE2C, #61DE2C)'
+            : 'conic-gradient(#61DE2C, #9E56F5, #E44FC6, #61DE2C)',
+          animation: 'spin 3s linear infinite',
+        }} />
 
-      {/* Gap layer */}
-      <div style={{
-        position: 'absolute',
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        background: '#6E01F0',
-        zIndex: 1,
-      }} />
+        {/* Gap layer */}
+        <div style={{
+          position: 'absolute',
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: '#6E01F0',
+          zIndex: 1,
+        }} />
 
-      {/* Avatar circle */}
-      <div style={{
-        position: 'absolute',
-        width: '36px',
-        height: '36px',
-        borderRadius: '50%',
-        background: '#120F0F',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2,
-      }}>
-        <span style={{
-          fontSize: '10px',
-          fontWeight: '700',
-          color: '#F3F3F3',
-          fontFamily: 'Inter, sans-serif',
-          letterSpacing: '0.5px',
-        }}>CK</span>
-      </div>
-    </button>
+        {/* Avatar circle */}
+        <div style={{
+          position: 'absolute',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          background: '#120F0F',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2,
+        }}>
+          {isAdmin
+            ? <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#61DE2C',
+              }} />
+            : <span style={{
+                fontSize: '10px',
+                fontWeight: '700',
+                color: '#F3F3F3',
+                fontFamily: 'Inter, sans-serif',
+                letterSpacing: '0.5px',
+              }}>CK</span>
+          }
+        </div>
+      </button>
+
+      {loginOpen && (
+        <LoginSheet onClose={() => setLoginOpen(false)} />
+      )}
+    </>
   )
 }
 

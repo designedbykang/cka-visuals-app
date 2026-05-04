@@ -1,48 +1,35 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useTheme } from '@/context/ThemeContext'
-import { ArrowLeft, MoreVertical, Heart, Share2, Download, Bookmark, X } from 'lucide-react'
+import { ArrowLeft, MoreVertical, Heart, Share2, Download, Bookmark } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
-const STORIES = [
-  { id: 1, media: '/story-1.png', type: 'image', caption: 'Fresh drops this week.', timestamp: '2h ago' },
-  { id: 2, media: '/story-2.png', type: 'image', caption: 'Behind the scenes.', timestamp: '4h ago' },
-  { id: 3, media: '/story-3.png', type: 'image', caption: 'New services available.', timestamp: '6h ago' },
-  { id: 4, media: '/story-4.png', type: 'image', caption: 'Portfolio highlight.', timestamp: '8h ago' },
-  { id: 5, media: '/story-5.png', type: 'image', caption: 'Stay tuned for more.', timestamp: '10h ago' },
-]
+const DURATION = 5000
 
-const DURATION = 5000 // 5 seconds per story
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000)
+  if (seconds < 60) return 'just now'
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+  return `${Math.floor(seconds / 86400)}d ago`
+}
 
-// ── Progress Bar ───────────────────────────────────────
 function ProgressBars({ total, current, progress }) {
   return (
-    <div style={{
-      display: 'flex',
-      gap: '4px',
-      padding: '0 12px',
-    }}>
+    <div style={{ display: 'flex', gap: '4px', padding: '0 12px' }}>
       {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1,
-            height: '2px',
-            borderRadius: '2px',
-            background: 'rgba(243,243,243,0.3)',
-            overflow: 'hidden',
-          }}
-        >
+        <div key={i} style={{
+          flex: 1,
+          height: '2px',
+          borderRadius: '2px',
+          background: 'rgba(243,243,243,0.3)',
+          overflow: 'hidden',
+        }}>
           <div style={{
             height: '100%',
             borderRadius: '2px',
             background: '#F3F3F3',
-            width: i < current
-              ? '100%'
-              : i === current
-                ? `${progress}%`
-                : '0%',
-            transition: i === current ? 'none' : 'none',
+            width: i < current ? '100%' : i === current ? `${progress}%` : '0%',
           }} />
         </div>
       ))}
@@ -50,7 +37,6 @@ function ProgressBars({ total, current, progress }) {
   )
 }
 
-// ── Story Header ───────────────────────────────────────
 function StoryHeader({ story, onClose, onMenuToggle }) {
   return (
     <div style={{
@@ -59,12 +45,7 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
       justifyContent: 'space-between',
       padding: '12px 16px',
     }}>
-      {/* Left — back + identity */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <button
           onClick={onClose}
           style={{
@@ -82,7 +63,6 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
           <ArrowLeft size={18} color="#F3F3F3" />
         </button>
 
-        {/* Avatar — no gradient ring in viewer */}
         <div style={{
           width: '32px',
           height: '32px',
@@ -119,7 +99,6 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
         </div>
       </div>
 
-      {/* Right — 3 dot menu */}
       <button
         onClick={onMenuToggle}
         style={{
@@ -140,8 +119,7 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
   )
 }
 
-// ── 3 Dot Menu ─────────────────────────────────────────
-function StoryMenu({ onClose }) {
+function StoryMenu() {
   const items = [
     { icon: <Share2 size={16} />, label: 'Share' },
     { icon: <Download size={16} />, label: 'Download' },
@@ -176,7 +154,6 @@ function StoryMenu({ onClose }) {
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
             cursor: 'pointer',
-            transition: 'background 0.15s ease',
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(243,243,243,0.08)'}
           onMouseLeave={e => e.currentTarget.style.background = 'none'}
@@ -189,28 +166,11 @@ function StoryMenu({ onClose }) {
   )
 }
 
-// ── Story Footer ───────────────────────────────────────
 function StoryFooter({ liked, onLike, caption }) {
   const [reply, setReply] = useState('')
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: 'CKA Visuals',
-        text: caption,
-        url: window.location.href,
-      })
-    }
-  }
-
   return (
-    <div style={{
-      padding: '12px 16px 24px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-    }}>
-      {/* Caption */}
+    <div style={{ padding: '12px 16px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {caption && (
         <p style={{
           color: '#F3F3F3',
@@ -223,13 +183,7 @@ function StoryFooter({ liked, onLike, caption }) {
         </p>
       )}
 
-      {/* Reply + Like row */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-      }}>
-        {/* Reply input — mirrors search bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
           flex: 1,
           height: '44px',
@@ -258,19 +212,14 @@ function StoryFooter({ liked, onLike, caption }) {
           />
         </div>
 
-        {/* Like button */}
         <button
           onClick={onLike}
           style={{
             width: '44px',
             height: '44px',
             borderRadius: '12px',
-            background: liked
-              ? 'rgba(228,79,198,0.2)'
-              : 'rgba(0,0,0,0.3)',
-            border: `1.5px solid ${liked
-              ? '#E44FC6'
-              : 'rgba(243,243,243,0.25)'}`,
+            background: liked ? 'rgba(228,79,198,0.2)' : 'rgba(0,0,0,0.3)',
+            border: `1.5px solid ${liked ? '#E44FC6' : 'rgba(243,243,243,0.25)'}`,
             backdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
@@ -291,71 +240,100 @@ function StoryFooter({ liked, onLike, caption }) {
   )
 }
 
-// ── Story Viewer ───────────────────────────────────────
 export default function StoryViewer({ onClose }) {
+  const [stories, setStories] = useState([])
   const [current, setCurrent] = useState(0)
   const [progress, setProgress] = useState(0)
   const [paused, setPaused] = useState(false)
   const [liked, setLiked] = useState({})
   const [menuOpen, setMenuOpen] = useState(false)
-  const intervalRef = useRef(null)
+  const [loading, setLoading] = useState(true)
   const progressRef = useRef(0)
 
-  const story = STORIES[current]
-
-  // Progress timer
   useEffect(() => {
-    if (paused) return
+    const fetchStories = async () => {
+      const { data, error } = await supabase
+        .from('daily_status')
+        .select('*')
+        .eq('is_active', true)
+        .order('sequence_order', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching stories:', error)
+        return
+      }
+
+      setStories(data)
+      setLoading(false)
+    }
+
+    fetchStories()
+  }, [])
+
+  const story = stories[current]
+
+  useEffect(() => {
+    if (paused || loading || stories.length === 0) return
 
     progressRef.current = progress
 
-    intervalRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       progressRef.current += (100 / (DURATION / 100))
 
       if (progressRef.current >= 100) {
         progressRef.current = 0
         setProgress(0)
-        setCurrent(prev => {
-          if (prev < STORIES.length - 1) return prev + 1
-          return prev
-        })
+        setCurrent(prev =>
+          prev < stories.length - 1 ? prev + 1 : prev
+        )
       } else {
         setProgress(progressRef.current)
       }
     }, 100)
 
-    return () => clearInterval(intervalRef.current)
-  }, [current, paused])
+    return () => clearInterval(interval)
+  }, [current, paused, loading, stories])
 
-  // Reset progress on story change
   useEffect(() => {
     setProgress(0)
     progressRef.current = 0
   }, [current])
 
-  // Tap navigation
   const handleTap = (e) => {
-    if (menuOpen) {
-      setMenuOpen(false)
-      return
-    }
+    if (menuOpen) { setMenuOpen(false); return }
     const x = e.clientX
     const mid = window.innerWidth / 2
-
     if (x > mid) {
-      if (current < STORIES.length - 1) {
-        setCurrent(prev => prev + 1)
-      }
+      if (current < stories.length - 1) setCurrent(prev => prev + 1)
     } else {
-      if (current > 0) {
-        setCurrent(prev => prev - 1)
-      }
+      if (current > 0) setCurrent(prev => prev - 1)
     }
   }
 
-  // Press and hold to pause
-  const handlePressStart = () => setPaused(true)
-  const handlePressEnd = () => setPaused(false)
+  if (loading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#000',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          border: '2px solid rgba(243,243,243,0.1)',
+          borderTop: '2px solid #61DE2C',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+      </div>
+    )
+  }
+
+  if (!story) return null
 
   return (
     <div
@@ -369,37 +347,33 @@ export default function StoryViewer({ onClose }) {
         userSelect: 'none',
       }}
       onClick={handleTap}
-      onMouseDown={handlePressStart}
-      onMouseUp={handlePressEnd}
-      onTouchStart={handlePressStart}
-      onTouchEnd={handlePressEnd}
+      onMouseDown={() => setPaused(true)}
+      onMouseUp={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
     >
-      {/* Progress bars */}
       <div style={{ paddingTop: '12px' }}>
         <ProgressBars
-          total={STORIES.length}
+          total={stories.length}
           current={current}
           progress={progress}
         />
       </div>
 
-      {/* Header */}
       <div onClick={e => e.stopPropagation()}>
         <StoryHeader
-          story={story}
+          story={{ ...story, timestamp: timeAgo(story.created_at) }}
           onClose={onClose}
           onMenuToggle={() => setMenuOpen(!menuOpen)}
         />
       </div>
 
-      {/* 3 dot menu */}
       {menuOpen && (
         <div onClick={e => e.stopPropagation()}>
-          <StoryMenu onClose={() => setMenuOpen(false)} />
+          <StoryMenu />
         </div>
       )}
 
-      {/* Media — full screen, respects dimensions */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -409,7 +383,7 @@ export default function StoryViewer({ onClose }) {
         position: 'relative',
       }}>
         <img
-          src={story.media}
+          src={`/${story.media_url}`}
           alt=""
           style={{
             maxWidth: '100%',
@@ -421,7 +395,6 @@ export default function StoryViewer({ onClose }) {
           draggable={false}
         />
 
-        {/* Paused indicator */}
         {paused && (
           <div style={{
             position: 'absolute',
@@ -436,10 +409,7 @@ export default function StoryViewer({ onClose }) {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-            }}>
+            <div style={{ display: 'flex', gap: '4px' }}>
               <div style={{ width: '3px', height: '16px', background: '#F3F3F3', borderRadius: '2px' }} />
               <div style={{ width: '3px', height: '16px', background: '#F3F3F3', borderRadius: '2px' }} />
             </div>
@@ -447,14 +417,10 @@ export default function StoryViewer({ onClose }) {
         )}
       </div>
 
-      {/* Footer */}
       <div onClick={e => e.stopPropagation()}>
         <StoryFooter
           liked={liked[current] || false}
-          onLike={() => setLiked(prev => ({
-            ...prev,
-            [current]: !prev[current]
-          }))}
+          onLike={() => setLiked(prev => ({ ...prev, [current]: !prev[current] }))}
           caption={story.caption}
         />
       </div>

@@ -1,16 +1,17 @@
 import { ThemeProvider } from '@/context/ThemeContext'
+import { AdminProvider } from '@/context/AdminContext'
 import './globals.css'
 
 export const metadata = {
-  title: 'CKA Lagos Directory',
-  description: 'Curated Lagos business directory',
+  title: 'CKA Visuals',
+  description: 'Curated creative studio',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-      <meta name="theme-color" content="#6E01F0" />
+        <meta name="theme-color" content="#6E01F0" />
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {
@@ -24,9 +25,11 @@ export default function RootLayout({ children }) {
         }} />
       </head>
       <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <AdminProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </AdminProvider>
       </body>
     </html>
   )

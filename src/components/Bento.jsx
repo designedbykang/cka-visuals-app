@@ -7,6 +7,7 @@ import StatusUploadSheet from './StatusUploadSheet'
 import { Plus } from 'lucide-react'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
 import StoryViewer from './StoryViewer'
+import Link from 'next/link'
 
 function ActionBar() {
   const actions = [
@@ -195,6 +196,10 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
   )
 }
 
+const CARD_LINKS = {
+  Services: '/services',
+}
+
 function GridCard({ label, theme }) {
   const isDark = theme === 'dark'
 
@@ -207,42 +212,32 @@ function GridCard({ label, theme }) {
   }
 
   const accent = accents[label] || '#6E01F0'
+  const href = CARD_LINKS[label]
 
-  return (
-    <div
-      style={{
-        flex: 1,
-        borderRadius: '16px',
-        background: isDark
-          ? 'rgba(243,243,243,0.04)'
-          : 'rgba(110,1,240,0.04)',
-        border: `1px solid ${isDark
-          ? 'rgba(243,243,243,0.08)'
-          : 'rgba(110,1,240,0.1)'}`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-end',
-        padding: '14px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-        overflow: 'hidden',
-        minHeight: 0,
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.border = `1px solid ${accent}66`
-        e.currentTarget.style.background = `${accent}11`
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.border = `1px solid ${isDark
-          ? 'rgba(243,243,243,0.08)'
-          : 'rgba(110,1,240,0.1)'}`
-        e.currentTarget.style.background = isDark
-          ? 'rgba(243,243,243,0.04)'
-          : 'rgba(110,1,240,0.04)'
-      }}
-    >
+  const cardStyle = {
+    flex: 1,
+    borderRadius: '16px',
+    background: isDark
+      ? 'rgba(243,243,243,0.04)'
+      : 'rgba(110,1,240,0.04)',
+    border: `1px solid ${isDark
+      ? 'rgba(243,243,243,0.08)'
+      : 'rgba(110,1,240,0.1)'}`,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
+    padding: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 0,
+    textDecoration: 'none',
+  }
+
+  const inner = (
+    <>
       <div style={{
         position: 'absolute',
         top: '14px',
@@ -252,7 +247,6 @@ function GridCard({ label, theme }) {
         borderRadius: '50%',
         background: accent,
       }} />
-
       <p style={{
         color: isDark ? '#F3F3F3' : '#120F0F',
         fontSize: '14px',
@@ -262,6 +256,29 @@ function GridCard({ label, theme }) {
       }}>
         {label}
       </p>
+    </>
+  )
+
+  const hoverOn = e => {
+    e.currentTarget.style.border = `1px solid ${accent}66`
+    e.currentTarget.style.background = `${accent}11`
+  }
+  const hoverOff = e => {
+    e.currentTarget.style.border = `1px solid ${isDark ? 'rgba(243,243,243,0.08)' : 'rgba(110,1,240,0.1)'}`
+    e.currentTarget.style.background = isDark ? 'rgba(243,243,243,0.04)' : 'rgba(110,1,240,0.04)'
+  }
+
+  if (href) {
+    return (
+      <Link href={href} style={cardStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+        {inner}
+      </Link>
+    )
+  }
+
+  return (
+    <div style={cardStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+      {inner}
     </div>
   )
 }

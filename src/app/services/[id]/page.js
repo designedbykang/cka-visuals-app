@@ -5,18 +5,27 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, BookOpen } from 'lucide-react'
 import { useService } from '@/hooks/useService'
+import { useAdmin } from '@/context/AdminContext'
+import { useLongPress } from '@/hooks/useLongPress'
 import ServiceHero from '@/components/services/ServiceHero'
 import PackageSelector from '@/components/services/PackageSelector'
 import DeliverablesList from '@/components/services/DeliverablesList'
 import EnquirySheet from '@/components/services/EnquirySheet'
+import HeroUploadSheet from '@/components/services/HeroUploadSheet'
 import { useServicesContext } from '@/context/ServicesContext'
 
 export default function ServicePage() {
   const { id } = useParams()
   const router = useRouter()
-  const { service, packages, deliverables, loading } = useService(id)
+  const { isAdmin } = useAdmin()
+  const [fetchKey, setFetchKey] = useState(0)
+  const { service, packages, deliverables, loading } = useService(id, fetchKey)
   const { selectedPackageId, setSelectedPackageId } = useServicesContext()
   const [enquiryOpen, setEnquiryOpen] = useState(false)
+  const [heroUploadOpen, setHeroUploadOpen] = useState(false)
+
+  const refresh = () => setFetchKey(k => k + 1)
+  const heroLongPress = useLongPress(() => { if (isAdmin) setHeroUploadOpen(true) })
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId) || null
 
@@ -62,7 +71,19 @@ export default function ServicePage() {
       </div>
 
       <div style={{ padding: '0 20px 100px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        <ServiceHero imageUrl={service.hero_image_url} serviceName={service.name} height="260px" />
+        <div {...(isAdmin ? heroLongPress : {})} style={{ position: 'relative', userSelect: 'none' }}>
+          <ServiceHero imageUrl={service.hero_image_url} serviceName={service.name} height="260px" />
+          {isAdmin && (
+            <div style={{
+              position: 'absolute', bottom: '10px', right: '10px',
+              background: 'rgba(0,0,0,0.5)', borderRadius: '8px', padding: '4px 8px',
+              color: '#9E56F5', fontSize: '11px', fontFamily: 'Inter, sans-serif', fontWeight: '600',
+              backdropFilter: 'blur(6px)',
+            }}>
+              Hold to change
+            </div>
+          )}
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <h1 style={{
@@ -161,6 +182,9 @@ export default function ServicePage() {
           selectedPackage={selectedPackage}
           onClose={() => setEnquiryOpen(false)}
         />
+      )}
+      {heroUploadOpen && (
+        <HeroUploadSheet service={service} onClose={() => setHeroUploadOpen(false)} onSuccess={refresh} />
       )}
     </div>
   )

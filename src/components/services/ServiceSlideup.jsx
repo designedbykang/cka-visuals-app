@@ -2,26 +2,48 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { X, BookOpen, Plus } from 'lucide-react'
+import { X, Check, Plus, BookOpen } from 'lucide-react'
 import { useServicesContext } from '@/context/ServicesContext'
 import { useAdmin } from '@/context/AdminContext'
 import { useLongPress } from '@/hooks/useLongPress'
 import { useService } from '@/hooks/useService'
 import ServiceHero from './ServiceHero'
-import PackageSelector from './PackageSelector'
-import DeliverablesList from './DeliverablesList'
-import EnquirySheet from './EnquirySheet'
+import PackageBox from './PackageBox'
 import HeroUploadSheet from './HeroUploadSheet'
 import PackageEditSheet from './PackageEditSheet'
 import DeliverableEditSheet from './DeliverableEditSheet'
 
+function DeliverableRow({ deliverable, isAdmin, onLongPress }) {
+  const longPress = useLongPress(() => { if (isAdmin && onLongPress) onLongPress(deliverable) })
+  return (
+    <div
+      {...(isAdmin ? longPress : {})}
+      style={{ display: 'flex', alignItems: 'center', gap: '10px', userSelect: 'none' }}
+    >
+      <div style={{
+        width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(110,1,240,0.2)', border: '1px solid rgba(110,1,240,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Check size={11} color="#9E56F5" />
+      </div>
+      <span style={{ color: 'rgba(243,243,243,0.8)', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+        {deliverable.label}
+      </span>
+    </div>
+  )
+}
+
 export default function ServiceSlideup() {
-  const { slideupOpen, selectedServiceId, closeSlideup, setSelectedPackageId, selectedPackageId } = useServicesContext()
+  const {
+    slideupOpen, selectedServiceId, closeSlideup,
+    setSelectedPackageId, selectedPackageId,
+    openContactPopup,
+  } = useServicesContext()
   const { isAdmin } = useAdmin()
   const [fetchKey, setFetchKey] = useState(0)
   const { service, packages, deliverables, loading } = useService(selectedServiceId, fetchKey)
 
-  const [enquiryOpen, setEnquiryOpen] = useState(false)
   const [heroUploadOpen, setHeroUploadOpen] = useState(false)
   const [editPkg, setEditPkg] = useState(null)
   const [addPkgOpen, setAddPkgOpen] = useState(false)
@@ -37,46 +59,86 @@ export default function ServiceSlideup() {
 
   return (
     <>
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 50,
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        {/* backdrop */}
         <div
-          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}
           onClick={closeSlideup}
         />
 
+        {/* sheet */}
         <div style={{
-          position: 'relative', background: 'var(--bg-primary)',
-          borderRadius: '24px 24px 0 0', maxHeight: '88dvh',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          position: 'relative',
+          background: 'var(--bg-primary)',
+          borderRadius: '24px 24px 0 0',
+          maxHeight: '92dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
+          {/* drag handle */}
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '10px', flexShrink: 0 }}>
             <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--bg-card-border)' }} />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 20px 16px' }}>
-            <div />
-            <button onClick={closeSlideup} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--bg-card-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+          {/* header: START PROJECT + X */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 20px 14px',
+            flexShrink: 0,
+          }}>
+            <div style={{ width: '32px' }} />
+            <span style={{
+              color: 'rgba(243,243,243,0.6)',
+              fontSize: '12px',
+              fontWeight: '600',
+              fontFamily: 'Inter, sans-serif',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+            }}>
+              Start Project
+            </span>
+            <button
+              onClick={closeSlideup}
+              style={{
+                width: '32px', height: '32px', borderRadius: '10px',
+                background: 'var(--bg-card)', border: '1px solid var(--bg-card-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--text-secondary)',
+              }}
+            >
               <X size={16} />
             </button>
           </div>
 
-          <div style={{ overflowY: 'auto', padding: '0 20px 40px', display: 'flex', flexDirection: 'column', gap: '24px', scrollbarWidth: 'none' }}>
+          {/* scrollable body */}
+          <div style={{
+            overflowY: 'auto',
+            flex: 1,
+            padding: '0 20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '22px',
+            scrollbarWidth: 'none',
+          }}>
             {loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {[1, 2, 3].map(i => <div key={i} style={{ height: i === 1 ? '200px' : '60px', borderRadius: '14px', background: 'var(--bg-card)' }} />)}
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ height: i === 1 ? '220px' : '60px', borderRadius: '14px', background: 'var(--bg-card)' }} />
+                ))}
               </div>
             ) : service ? (
               <>
-                {/* Hero */}
+                {/* Hero carousel */}
                 <div {...(isAdmin ? heroLongPress : {})} style={{ position: 'relative', userSelect: 'none' }}>
-                  <ServiceHero imageUrl={service.hero_image_url} serviceName={service.name} />
+                  <ServiceHero service={service} serviceName={service.name} variant="carousel" />
                   {isAdmin && (
                     <div style={{
-                      position: 'absolute', bottom: '10px', right: '10px',
-                      background: 'rgba(0,0,0,0.5)', borderRadius: '8px', padding: '4px 8px',
-                      color: '#9E56F5', fontSize: '11px', fontFamily: 'Inter, sans-serif', fontWeight: '600',
+                      position: 'absolute', bottom: '28px', right: '10px',
+                      background: 'rgba(0,0,0,0.6)', borderRadius: '8px', padding: '4px 8px',
+                      color: '#9E56F5', fontSize: '10px', fontFamily: 'Inter, sans-serif', fontWeight: '600',
                       backdropFilter: 'blur(6px)',
                     }}>
                       Hold to change
@@ -85,12 +147,18 @@ export default function ServiceSlideup() {
                 </div>
 
                 {/* Name + tagline */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <h2 style={{ color: 'var(--text-primary)', fontSize: '22px', fontWeight: '700', fontFamily: 'Inter, sans-serif', margin: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <h2 style={{
+                    color: '#F3F3F3', fontSize: '24px', fontWeight: '800',
+                    fontFamily: 'Inter, sans-serif', margin: 0, letterSpacing: '-0.5px',
+                  }}>
                     {service.name}
                   </h2>
                   {service.tagline && (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontFamily: 'Inter, sans-serif', margin: 0, lineHeight: '1.6' }}>
+                    <p style={{
+                      color: 'rgba(243,243,243,0.65)', fontSize: '14px',
+                      fontFamily: 'Inter, sans-serif', margin: 0, lineHeight: '1.6',
+                    }}>
                       {service.tagline}
                     </p>
                   )}
@@ -98,12 +166,22 @@ export default function ServiceSlideup() {
 
                 {/* Packages */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <PackageSelector
-                    packages={packages}
-                    selectedId={selectedPackageId}
-                    onSelect={pkg => setSelectedPackageId(pkg.id)}
-                    onLongPress={isAdmin ? pkg => setEditPkg(pkg) : undefined}
-                  />
+                  <p style={{
+                    color: 'rgba(243,243,243,0.45)', fontSize: '11px', fontWeight: '600',
+                    fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', letterSpacing: '1.2px', margin: 0,
+                  }}>
+                    Choose a package
+                  </p>
+                  {packages.map(pkg => (
+                    <PackageBox
+                      key={pkg.id}
+                      pkg={pkg}
+                      selected={pkg.id === selectedPackageId}
+                      onSelect={p => setSelectedPackageId(p.id)}
+                      isAdmin={isAdmin}
+                      onLongPress={p => setEditPkg(p)}
+                    />
+                  ))}
                   {isAdmin && (
                     <button onClick={() => setAddPkgOpen(true)} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
@@ -117,51 +195,84 @@ export default function ServiceSlideup() {
                 </div>
 
                 {/* Deliverables */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <DeliverablesList
-                    deliverables={deliverables}
-                    isAdmin={isAdmin}
-                    onLongPress={d => setEditDeliverable(d)}
-                  />
-                  {isAdmin && (
-                    <button onClick={() => setAddDeliverableOpen(true)} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                      padding: '10px', borderRadius: '10px', background: 'transparent',
-                      border: '1.5px dashed rgba(110,1,240,0.35)', color: '#9E56F5',
-                      fontSize: '13px', fontWeight: '600', fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                {(deliverables.length > 0 || isAdmin) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <p style={{
+                      color: 'rgba(243,243,243,0.45)', fontSize: '11px', fontWeight: '600',
+                      fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', letterSpacing: '1.2px', margin: 0,
                     }}>
-                      <Plus size={14} /> Add deliverable
-                    </button>
-                  )}
-                </div>
+                      What's included
+                    </p>
+                    {deliverables.map(d => (
+                      <DeliverableRow
+                        key={d.id}
+                        deliverable={d}
+                        isAdmin={isAdmin}
+                        onLongPress={() => setEditDeliverable(d)}
+                      />
+                    ))}
+                    {isAdmin && (
+                      <button onClick={() => setAddDeliverableOpen(true)} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        padding: '10px', borderRadius: '10px', background: 'transparent',
+                        border: '1.5px dashed rgba(110,1,240,0.35)', color: '#9E56F5',
+                        fontSize: '13px', fontWeight: '600', fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                      }}>
+                        <Plus size={14} /> Add deliverable
+                      </button>
+                    )}
+                  </div>
+                )}
 
-                <Link href={`/services/${service.id}`} onClick={closeSlideup} style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  color: 'var(--text-secondary)', fontSize: '13px',
-                  fontFamily: 'Inter, sans-serif', textDecoration: 'none',
-                }}>
-                  <BookOpen size={14} /> Read more about this service
-                </Link>
-
-                <button onClick={() => setEnquiryOpen(true)} disabled={!selectedPackage} style={{
-                  width: '100%', padding: '15px', borderRadius: '14px',
-                  background: selectedPackage ? 'linear-gradient(135deg, #9E56F5, #6E01F0)' : 'var(--bg-card)',
-                  border: selectedPackage ? 'none' : '1px solid var(--bg-card-border)',
-                  color: selectedPackage ? '#F3F3F3' : 'var(--text-secondary)',
-                  fontSize: '15px', fontWeight: '600', fontFamily: 'Inter, sans-serif',
-                  cursor: selectedPackage ? 'pointer' : 'default', transition: 'all 0.18s ease',
-                }}>
-                  {selectedPackage ? `Enquire — ${selectedPackage.name}` : 'Select a package to enquire'}
-                </button>
+                {/* Deep dive link */}
+                {service.literature && (
+                  <Link
+                    href={`/services/${service.id}/learn-more`}
+                    onClick={closeSlideup}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      color: 'rgba(243,243,243,0.4)', fontSize: '13px',
+                      fontFamily: 'Inter, sans-serif', textDecoration: 'none',
+                    }}
+                  >
+                    <BookOpen size={13} /> Deep dive into {service.name}
+                  </Link>
+                )}
               </>
             ) : null}
+          </div>
+
+          {/* sticky CTA */}
+          <div style={{
+            padding: '12px 20px 28px',
+            flexShrink: 0,
+            background: 'var(--bg-primary)',
+            borderTop: '1px solid var(--bg-card-border)',
+          }}>
+            <button
+              onClick={() => selectedPackage && openContactPopup()}
+              disabled={!selectedPackage}
+              style={{
+                width: '100%',
+                padding: '15px',
+                borderRadius: '14px',
+                background: selectedPackage ? '#FF3B8C' : 'var(--bg-card)',
+                border: selectedPackage ? 'none' : '1px solid var(--bg-card-border)',
+                color: selectedPackage ? '#fff' : 'var(--text-secondary)',
+                fontSize: '15px',
+                fontWeight: '700',
+                fontFamily: 'Inter, sans-serif',
+                cursor: selectedPackage ? 'pointer' : 'default',
+                transition: 'background 0.18s ease',
+                boxShadow: selectedPackage ? '0 4px 20px rgba(255,59,140,0.4)' : 'none',
+              }}
+            >
+              {selectedPackage ? `Book — ${selectedPackage.name}` : 'Select a package to continue'}
+            </button>
           </div>
         </div>
       </div>
 
-      {enquiryOpen && service && selectedPackage && (
-        <EnquirySheet service={service} selectedPackage={selectedPackage} onClose={() => setEnquiryOpen(false)} />
-      )}
       {heroUploadOpen && service && (
         <HeroUploadSheet service={service} onClose={() => setHeroUploadOpen(false)} onSuccess={refresh} />
       )}

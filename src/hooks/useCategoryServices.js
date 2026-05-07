@@ -14,7 +14,8 @@ export function useCategoryServices(categoryId) {
         .from('services')
         .select(`
           *,
-          service_tag_assignments(tag_id)
+          service_tag_assignments(tag_id),
+          service_packages(price, currency)
         `)
         .eq('category_id', categoryId)
         .eq('is_visible', true)

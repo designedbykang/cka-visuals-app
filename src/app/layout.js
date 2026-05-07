@@ -1,6 +1,7 @@
 import { ThemeProvider } from '@/context/ThemeContext'
 import { AdminProvider } from '@/context/AdminContext'
 import './globals.css'
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
   title: 'CKA Visuals',

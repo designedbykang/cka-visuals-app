@@ -295,8 +295,8 @@ export default function StoryViewer({ onClose }) {
   }, [current, paused, loading, stories])
 
   useEffect(() => {
-    setProgress(0)
     progressRef.current = 0
+    requestAnimationFrame(() => setProgress(0))
   }, [current])
 
   const handleTap = (e) => {
@@ -383,7 +383,7 @@ export default function StoryViewer({ onClose }) {
         position: 'relative',
       }}>
         <img
-          src={`/${story.media_url}`}
+          src={story.media_url}
           alt=""
           style={{
             maxWidth: '100%',

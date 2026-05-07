@@ -7,6 +7,7 @@ import StatusUploadSheet from './StatusUploadSheet'
 import { Plus } from 'lucide-react'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
 import StoryViewer from './StoryViewer'
+import Link from 'next/link'
 
 function ActionBar() {
   const actions = [
@@ -73,7 +74,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
     '/story-5.png',
   ]
 
-  // Auto slideshow
   useEffect(() => {
     const interval = setInterval(() => {
       setFading(true)
@@ -100,7 +100,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         cursor: 'pointer',
       }}
     >
-      {/* Slideshow background */}
       <img
         key={slideIndex}
         src={slides[slideIndex]}
@@ -121,7 +120,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         }}
       />
 
-      {/* Liquid glass overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
@@ -131,7 +129,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         backdropFilter: 'blur(0px)',
       }} />
 
-      {/* Glass shimmer layer */}
       <div style={{
         position: 'absolute',
         inset: 0,
@@ -143,7 +140,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         )`,
       }} />
 
-      {/* Top edge bevel */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -153,7 +149,6 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
       }} />
 
-      {/* Green dot — unseen indicator */}
       {hasUnseen && (
         <div style={{
           position: 'absolute',
@@ -195,6 +190,10 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
   )
 }
 
+const CARD_LINKS = {
+  Services: '/services',
+}
+
 function GridCard({ label, theme }) {
   const isDark = theme === 'dark'
 
@@ -207,42 +206,32 @@ function GridCard({ label, theme }) {
   }
 
   const accent = accents[label] || '#6E01F0'
+  const href = CARD_LINKS[label]
 
-  return (
-    <div
-      style={{
-        flex: 1,
-        borderRadius: '16px',
-        background: isDark
-          ? 'rgba(243,243,243,0.04)'
-          : 'rgba(110,1,240,0.04)',
-        border: `1px solid ${isDark
-          ? 'rgba(243,243,243,0.08)'
-          : 'rgba(110,1,240,0.1)'}`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-end',
-        padding: '14px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-        overflow: 'hidden',
-        minHeight: 0,
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.border = `1px solid ${accent}66`
-        e.currentTarget.style.background = `${accent}11`
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.border = `1px solid ${isDark
-          ? 'rgba(243,243,243,0.08)'
-          : 'rgba(110,1,240,0.1)'}`
-        e.currentTarget.style.background = isDark
-          ? 'rgba(243,243,243,0.04)'
-          : 'rgba(110,1,240,0.04)'
-      }}
-    >
+  const cardStyle = {
+    flex: 1,
+    borderRadius: '16px',
+    background: isDark
+      ? 'rgba(243,243,243,0.04)'
+      : 'rgba(110,1,240,0.04)',
+    border: `1px solid ${isDark
+      ? 'rgba(243,243,243,0.08)'
+      : 'rgba(110,1,240,0.1)'}`,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
+    padding: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 0,
+    textDecoration: 'none',
+  }
+
+  const inner = (
+    <>
       <div style={{
         position: 'absolute',
         top: '14px',
@@ -262,6 +251,29 @@ function GridCard({ label, theme }) {
       }}>
         {label}
       </p>
+    </>
+  )
+
+  const hoverOn = e => {
+    e.currentTarget.style.border = `1px solid ${accent}66`
+    e.currentTarget.style.background = `${accent}11`
+  }
+  const hoverOff = e => {
+    e.currentTarget.style.border = `1px solid ${isDark ? 'rgba(243,243,243,0.08)' : 'rgba(110,1,240,0.1)'}`
+    e.currentTarget.style.background = isDark ? 'rgba(243,243,243,0.04)' : 'rgba(110,1,240,0.04)'
+  }
+
+  if (href) {
+    return (
+      <Link href={href} style={cardStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+        {inner}
+      </Link>
+    )
+  }
+
+  return (
+    <div style={cardStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+      {inner}
     </div>
   )
 }
@@ -305,21 +317,17 @@ export default function Bento() {
   const [isMobile, setIsMobile] = useState(true)
   const [storyOpen, setStoryOpen] = useState(false)
   const { isAdmin } = useAdmin()
-const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
   const [bentoHeight, setBentoHeight] = useState('calc(100dvh - 120px)')
-  const [hasUnseen, setHasUnseen] = useState(false)
-
-useEffect(() => {
-  const seen = localStorage.getItem('cka-stories-seen')
-  if (!seen) setHasUnseen(true)
-}, [])
-
-const handleOpenStory = () => {
-  setStoryOpen(true)
-  setHasUnseen(false)
-  localStorage.setItem('cka-stories-seen', 'true')
-}
-
+  const [hasUnseen, setHasUnseen] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return false
+      const seen = localStorage.getItem('cka-stories-seen')
+      return !seen
+    } catch {
+      return false
+    }
+  })
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 1023px)')
@@ -342,11 +350,32 @@ const handleOpenStory = () => {
     return () => window.removeEventListener('resize', calculateHeight)
   }, [])
 
+  const handleOpenStory = () => {
+    setStoryOpen(true)
+    setHasUnseen(false)
+    localStorage.setItem('cka-stories-seen', 'true')
+  }
+
+  const handleUploadSuccess = () => {
+    setHasUnseen(true)
+    localStorage.removeItem('cka-stories-seen')
+  }
+
   if (isMobile) {
     return (
       <>
         {storyOpen && (
           <StoryViewer onClose={() => setStoryOpen(false)} />
+        )}
+
+        {uploadOpen && (
+          <StatusUploadSheet
+            onClose={() => setUploadOpen(false)}
+            onSuccess={() => {
+              setHasUnseen(true)
+              localStorage.removeItem('cka-stories-seen')
+            }}
+          />
         )}
 
         <div style={{
@@ -357,42 +386,41 @@ const handleOpenStory = () => {
           gap: '10px',
           overflow: 'hidden',
         }}>
-    
-    <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
-    <DailyStatus
-    theme={theme}
-    onClick={() => setStoryOpen(true)}
-    hasUnseen={hasUnseen}
-  />
+          <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
+            <DailyStatus
+              theme={theme}
+              onClick={handleOpenStory}
+              hasUnseen={hasUnseen}
+            />
 
-  {/* Admin upload button */}
-  {isAdmin && (
-    <button
-      onClick={e => {
-        e.stopPropagation()
-        setUploadOpen(true)
-      }}
-      style={{
-        position: 'absolute',
-        top: '12px',
-        left: '12px',
-        width: '36px',
-        height: '36px',
-        borderRadius: '10px',
-        background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
-        border: '1px solid rgba(243,243,243,0.2)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        zIndex: 3,
-        boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
-      }}
-    >
-      <Plus size={18} color="#F3F3F3" />
-    </button>
-  )}
-</div>
+            {isAdmin && (
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  setUploadOpen(true)
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  left: '12px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
+                  border: '1px solid rgba(243,243,243,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 3,
+                  boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
+                }}
+              >
+                <Plus size={18} color="#F3F3F3" />
+              </button>
+            )}
+          </div>
+
           <div style={{
             flex: 1,
             display: 'grid',
@@ -406,6 +434,13 @@ const handleOpenStory = () => {
             ))}
           </div>
         </div>
+
+        {uploadOpen && (
+          <StatusUploadSheet
+            onClose={() => setUploadOpen(false)}
+            onSuccess={handleUploadSuccess}
+          />
+        )}
 
         <FloatingChat />
       </>
@@ -425,64 +460,61 @@ const handleOpenStory = () => {
         gap: '12px',
         overflow: 'hidden',
       }}>
-<div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
-  <DailyStatus
-    theme={theme}
-    onClick={() => setStoryOpen(true)}
-    hasUnseen={hasUnseen}
-  />
+        <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
+          <DailyStatus
+            theme={theme}
+            onClick={handleOpenStory}
+            hasUnseen={hasUnseen}
+          />
 
-  {/* Admin upload button */}
-  {isAdmin && (
-    <button
-      onClick={e => {
-        e.stopPropagation()
-        setUploadOpen(true)
-      }}
-      style={{
-        position: 'absolute',
-        top: '12px',
-        left: '12px',
-        width: '36px',
-        height: '36px',
-        borderRadius: '10px',
-        background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
-        border: '1px solid rgba(243,243,243,0.2)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        zIndex: 3,
-        boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
-      }}
-    >
-      <Plus size={18} color="#F3F3F3" />
-    </button>
-  )}
-</div>
-          <div style={{
-            flex: 1,
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr 1fr',
-            gap: '10px',
-            minHeight: 0,
-          }}>
-            {['Services', 'Portfolio', 'Content', 'Portal'].map(label => (
-              <GridCard key={label} label={label} theme={theme} />
-            ))}
-          </div>
+          {isAdmin && (
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                setUploadOpen(true)
+              }}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                left: '12px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
+                border: '1px solid rgba(243,243,243,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 3,
+                boxShadow: '0 2px 12px rgba(110,1,240,0.4)',
+              }}
+            >
+              <Plus size={18} color="#F3F3F3" />
+            </button>
+          )}
         </div>
 
-        {uploadOpen && (
-  <StatusUploadSheet
-    onClose={() => setUploadOpen(false)}
-    onSuccess={() => {
-      setHasUnseen(true)
-      localStorage.removeItem('cka-stories-seen')
-    }}
-  />
-)}
+        <div style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: '1fr 1fr',
+          gap: '10px',
+          minHeight: 0,
+        }}>
+          {['Services', 'Portfolio', 'Content', 'Portal'].map(label => (
+            <GridCard key={label} label={label} theme={theme} />
+          ))}
+        </div>
+      </div>
+
+      {uploadOpen && (
+        <StatusUploadSheet
+          onClose={() => setUploadOpen(false)}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
 
       <FloatingChat />
     </>

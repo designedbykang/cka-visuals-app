@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAdmin } from '@/context/AdminContext'
 import LoginSheet from './LoginSheet'
 import { useTheme } from '@/context/ThemeContext'
@@ -44,18 +44,16 @@ function ThemeToggle({ theme, onToggle }) {
 
 function Logo() {
   const [pressing, setPressing] = useState(false)
-  let pressTimer = null
+  const pressTimer = useRef(null)
 
   const handlePressStart = () => {
-    pressTimer = setTimeout(() => {
+    pressTimer.current = setTimeout(() => {
       setPressing(true)
-      // Long press detected — animation hook goes here later
-      console.log('Long press — animation coming soon')
     }, 600)
   }
 
   const handlePressEnd = () => {
-    clearTimeout(pressTimer)
+    clearTimeout(pressTimer.current)
     setPressing(false)
   }
 
@@ -211,16 +209,16 @@ function DesktopGridButton({ onToggle }) {
 function Avatar() {
   const { isAdmin } = useAdmin()
   const [loginOpen, setLoginOpen] = useState(false)
-  let pressTimer = null
+  const pressTimer = useRef(null)
 
   const handlePressStart = () => {
-    pressTimer = setTimeout(() => {
+    pressTimer.current = setTimeout(() => {
       setLoginOpen(true)
     }, 600)
   }
 
   const handlePressEnd = () => {
-    clearTimeout(pressTimer)
+    clearTimeout(pressTimer.current)
   }
 
   return (

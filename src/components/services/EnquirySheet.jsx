@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { useEnquirySubmit } from '@/app/hooks/useEnquirySubmit'
+import { useEnquirySubmit } from '@/hooks/useEnquirySubmit'
 
 export default function EnquirySheet({ service, selectedPackage, onClose }) {
   const [name, setName] = useState('')
@@ -122,8 +122,8 @@ export default function EnquirySheet({ service, selectedPackage, onClose }) {
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Amara Osei"
               style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = 'rgba(110,1,240,0.5)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--bg-card-border)')}
+              onFocus={e => e.target.style.borderColor = 'rgba(110,1,240,0.5)'}
+              onBlur={e => e.target.style.borderColor = 'var(--bg-card-border)'}
             />
           </div>
 
@@ -137,8 +137,8 @@ export default function EnquirySheet({ service, selectedPackage, onClose }) {
               placeholder="What are you building? Who is it for? Any deadlines?"
               rows={4}
               style={{ ...inputStyle, resize: 'none', lineHeight: '1.5' }}
-              onFocus={e => (e.target.style.borderColor = 'rgba(110,1,240,0.5)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--bg-card-border)')}
+              onFocus={e => e.target.style.borderColor = 'rgba(110,1,240,0.5)'}
+              onBlur={e => e.target.style.borderColor = 'var(--bg-card-border)'}
             />
           </div>
 
@@ -172,4 +172,3 @@ export default function EnquirySheet({ service, selectedPackage, onClose }) {
     </div>
   )
 }
-

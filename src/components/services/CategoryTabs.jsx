@@ -1,7 +1,7 @@
 'use client'
 
+import { useServiceCategories } from '@/hooks/useServiceCategories'
 import { useServicesContext } from '@/context/ServicesContext'
-import { useServiceCategories } from '@/app/hooks/useServiceCategories'
 
 export default function CategoryTabs() {
   const { categories, loading } = useServiceCategories()
@@ -60,4 +60,3 @@ export default function CategoryTabs() {
     </div>
   )
 }
-

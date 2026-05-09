@@ -1,9 +1,10 @@
 import { ServicesProvider } from '@/context/ServicesContext'
+import ServicesShell from '@/components/services/ServicesShell'
 
 export default function ServicesLayout({ children }) {
   return (
     <ServicesProvider>
-      {children}
+      <ServicesShell>{children}</ServicesShell>
     </ServicesProvider>
   )
 }

@@ -111,12 +111,14 @@ function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
   )
 }
 
-function DailyStatus({ theme, onClick, hasUnseen, onSaved, bookmarks, setBookmarks }) {  const isDark = theme === 'dark'
+function DailyStatus({ theme, onClick, hasUnseen, onSaved, bookmarks, setBookmarks }) {
+  const isDark = theme === 'dark'
   const [slideIndex, setSlideIndex] = useState(0)
   const [fading, setFading] = useState(false)
-
   const [stories, setStories] = useState([])
   const [showPeek, setShowPeek] = useState(false)
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
 
 useEffect(() => {
   supabase
@@ -147,9 +149,6 @@ useEffect(() => {
       setTimeout(() => setShowPeek(false), 2000)  // Slide in, pause 2s, slide back
     }, 5000)  // Repeat every 5 seconds
     
-    const [touchStart, setTouchStart] = useState(0)
-const [touchEnd, setTouchEnd] = useState(0)
-
     return () => clearInterval(peekInterval)
   }, [stories])
   

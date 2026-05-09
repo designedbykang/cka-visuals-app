@@ -120,6 +120,8 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
 }
 
 function StoryMenu({ story, bookmarked, setBookmarked, onAction }) {
+  if (!story) return null
+
   const handleShare = async () => {
     if (navigator.share && story.media_url) {
       try {

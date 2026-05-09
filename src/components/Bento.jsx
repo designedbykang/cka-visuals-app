@@ -11,6 +11,8 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
+  if (!story) return null
+
   const handleSave = () => {
     onAction?.('Saved!')
   }
@@ -50,7 +52,7 @@ function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
   }
 
   const handleBookmark = () => {
-    setBookmarked(!bookmarked)
+    setBookmarked?.(!bookmarked)
     onAction?.(bookmarked ? 'Removed bookmark' : 'Added bookmark')
   }
 
@@ -159,24 +161,18 @@ useEffect(() => {
   }
 
   const handleTouchEnd = (e) => {
-    setTouchEnd(e.changedTouches[0].clientX)
-    handleSwipe(e.changedTouches[0].clientX)
-  }
-
-  const handleSwipe = (endX) => {
-    if (!touchStart || !endX) return
+    const endX = e.changedTouches[0].clientX
     const distance = touchStart - endX
     const isLeftSwipe = distance > 50
     const isRightSwipe = distance < -50
 
-    if (isLeftSwipe && slideIndex < stories.length - 1) {
-      setSlideIndex(slideIndex + 1)
-    } else if (isRightSwipe && slideIndex > 0) {
-      setSlideIndex(slideIndex - 1)
+    if (isLeftSwipe) {
+      setSlideIndex(prev => prev < stories.length - 1 ? prev + 1 : prev)
+    } else if (isRightSwipe) {
+      setSlideIndex(prev => prev > 0 ? prev - 1 : prev)
     }
 
     setTouchStart(0)
-    setTouchEnd(0)
   }
 
   return (

@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
 import StoryViewer from './StoryViewer'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 function ActionBar() {
   const actions = [
@@ -27,7 +28,7 @@ function ActionBar() {
       justifyContent: 'space-around',
       padding: '12px 16px',
       background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
-      borderRadius: '0 0 16px 16px',
+      borderRadius: '0 0 6px 6px',
     }}>
       {actions.map(({ icon, label }) => (
         <button
@@ -38,7 +39,7 @@ function ActionBar() {
             alignItems: 'center',
             gap: '6px',
             padding: '8px 20px',
-            borderRadius: '10px',
+            borderRadius: '60px',
             background: 'rgba(243,243,243,0.12)',
             border: '1px solid rgba(243,243,243,0.2)',
             backdropFilter: 'blur(12px)',
@@ -66,24 +67,28 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
   const [slideIndex, setSlideIndex] = useState(0)
   const [fading, setFading] = useState(false)
 
-  const slides = [
-    '/story-1.png',
-    '/story-2.png',
-    '/story-3.png',
-    '/story-4.png',
-    '/story-5.png',
-  ]
+  const [stories, setStories] = useState([])
+
+useEffect(() => {
+  supabase
+    .from('daily_status')
+    .select('id, media_url, media_type, caption')
+    .eq('is_active', true)
+    .order('sequence_order', { ascending: true })
+    .then(({ data }) => { if (data?.length) setStories(data) })
+}, [])
 
   useEffect(() => {
+    if (!stories.length) return
     const interval = setInterval(() => {
       setFading(true)
       setTimeout(() => {
-        setSlideIndex(i => (i + 1) % slides.length)
+        setSlideIndex(i => (i + 1) % stories.length)
         setFading(false)
       }, 600)
     }, 3000)
     return () => clearInterval(interval)
-  }, [])
+  }, [stories])
 
   return (
     <div
@@ -92,7 +97,7 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         position: 'relative',
         width: '100%',
         height: '100%',
-        borderRadius: '16px',
+        borderRadius: '6px',
         overflow: 'hidden',
         border: `1px solid ${isDark
           ? 'rgba(243,243,243,0.08)'
@@ -100,54 +105,59 @@ function DailyStatus({ theme, onClick, hasUnseen }) {
         cursor: 'pointer',
       }}
     >
-      <img
-        key={slideIndex}
-        src={slides[slideIndex]}
-        alt=""
-        draggable={false}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          filter: 'blur(10px)',
-          transform: 'scale(1.12)',
-          pointerEvents: 'none',
-          userSelect: 'none',
-          opacity: fading ? 0 : 1,
-          transition: 'opacity 0.6s ease',
-        }}
-      />
-
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: isDark
-          ? 'rgba(0,0,0,0.35)'
-          : 'rgba(255,255,255,0.15)',
-        backdropFilter: 'blur(0px)',
-      }} />
-
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: `linear-gradient(
-          135deg,
-          rgba(255,255,255,0.08) 0%,
-          rgba(255,255,255,0.03) 40%,
-          rgba(110,1,240,0.08) 100%
-        )`,
-      }} />
-
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '10%',
-        right: '10%',
-        height: '1px',
-        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-      }} />
+      {(() => {
+        const story = stories[slideIndex]
+        if (!story) return null
+        if (story.media_type === 'text') {
+          return (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px',
+              opacity: fading ? 0 : 1,
+              transition: 'opacity 0.6s ease',
+            }}>
+              <p style={{
+                color: '#F3F3F3', fontSize: '15px',
+                fontFamily: 'Inter, sans-serif',
+                textAlign: 'center', margin: 0,
+              }}>
+                {story.caption}
+              </p>
+            </div>
+          )
+        }
+        return (
+          <>
+            <img
+              key={story.id}
+              src={story.media_url}
+              alt=""
+              draggable={false}
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                transform: 'scale(1)',
+                objectFit: 'cover',
+                pointerEvents: 'none', userSelect: 'none',
+                opacity: fading ? 0 : 1,
+                transition: 'opacity .88s ease',
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: 0, left: 0, right: 0,
+              height: '55%',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 60%)',
+              pointerEvents: 'none',
+            }} />
+          </>
+        )
+      })()}
 
       {hasUnseen && (
         <div style={{
@@ -210,7 +220,7 @@ function GridCard({ label, theme }) {
 
   const cardStyle = {
     flex: 1,
-    borderRadius: '16px',
+    borderRadius: '6px',
     background: isDark
       ? 'rgba(243,243,243,0.04)'
       : 'rgba(110,1,240,0.04)',
@@ -287,7 +297,7 @@ function FloatingChat() {
         right: '20px',
         width: '52px',
         height: '52px',
-        borderRadius: '16px',
+        borderRadius: '50px',
         background: 'linear-gradient(135deg, #9E56F5, #6E01F0)',
         border: '1px solid rgba(243,243,243,0.2)',
         display: 'flex',
@@ -319,15 +329,16 @@ export default function Bento() {
   const { isAdmin } = useAdmin()
   const [uploadOpen, setUploadOpen] = useState(false)
   const [bentoHeight, setBentoHeight] = useState('calc(100dvh - 120px)')
-  const [hasUnseen, setHasUnseen] = useState(() => {
+  const [hasUnseen, setHasUnseen] = useState(false)
+
+  useEffect(() => {
     try {
-      if (typeof window === 'undefined') return false
       const seen = localStorage.getItem('cka-stories-seen')
-      return !seen
+      setHasUnseen(!seen)
     } catch {
-      return false
+      // ignore
     }
-  })
+  }, [])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 1023px)')

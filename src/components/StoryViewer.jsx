@@ -248,6 +248,7 @@ export default function StoryViewer({ onClose }) {
   const [liked, setLiked] = useState({})
   const [menuOpen, setMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [mediaLoading, setMediaLoading] = useState(false)
   const progressRef = useRef(0)
 
   useEffect(() => {
@@ -273,7 +274,7 @@ export default function StoryViewer({ onClose }) {
   const story = stories[current]
 
   useEffect(() => {
-    if (paused || loading || stories.length === 0) return
+    if (paused || loading || mediaLoading || stories.length === 0) return
 
     progressRef.current = progress
 
@@ -292,12 +293,18 @@ export default function StoryViewer({ onClose }) {
     }, 100)
 
     return () => clearInterval(interval)
-  }, [current, paused, loading, stories])
+  }, [current, paused, loading, mediaLoading, stories])
 
   useEffect(() => {
     progressRef.current = 0
     requestAnimationFrame(() => setProgress(0))
-  }, [current])
+    const story = stories[current]
+    if (!story || story.media_type === 'text') {
+      setMediaLoading(false)   // text stories have no media to wait for
+    } else {
+      setMediaLoading(true)
+    }
+  }, [current, stories])
 
   const handleTap = (e) => {
     if (menuOpen) { setMenuOpen(false); return }
@@ -382,19 +389,58 @@ export default function StoryViewer({ onClose }) {
         overflow: 'hidden',
         position: 'relative',
       }}>
-        <img
-          src={story.media_url}
-          alt=""
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-          draggable={false}
-        />
-
+{story.media_type === 'video' ? (
+  <video
+    key={story.id}
+    src={story.media_url}
+    autoPlay
+    muted
+    playsInline
+    onCanPlay={() => setMediaLoading(false)}
+    onError={() => setMediaLoading(false)}
+    style={{
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      pointerEvents: 'none',
+      userSelect: 'none',
+    }}
+  />
+) : (
+  <img
+    key={story.id}
+    src={story.media_url}
+    alt=""
+    onLoad={() => setMediaLoading(false)}
+    onError={() => setMediaLoading(false)}
+    style={{
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      pointerEvents: 'none',
+      userSelect: 'none',
+    }}
+    draggable={false}
+  />
+)}
+{mediaLoading && (
+  <div style={{
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(0,0,0,0.15)',
+  }}>
+    <div style={{
+      width: 28, height: 28,
+      border: '3px solid rgba(255,255,255,0.4)',
+      borderTopColor: '#fff',
+      borderRadius: '50%',
+      animation: 'spin 0.7s linear infinite',
+    }} />
+  </div>
+)}
         {paused && (
           <div style={{
             position: 'absolute',

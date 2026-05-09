@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { useService } from '@/hooks/useService'
+import { useService } from '@/app/hooks/useService'
 import ServiceLiterature from '@/components/services/ServiceLiterature'
 
 export default function LearnMorePage() {

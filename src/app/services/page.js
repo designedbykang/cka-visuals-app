@@ -1,8 +1,8 @@
 'use client'
 
 import { useServicesContext } from '@/context/ServicesContext'
-import { useCategoryServices } from '@/hooks/useCategoryServices'
-import { useServiceCategories } from '@/hooks/useServiceCategories'
+import { useCategoryServices } from '@/app/hooks/useCategoryServices'
+import { useServiceCategories } from '@/app/hooks/useServiceCategories'
 import CategoryTabs from '@/components/services/CategoryTabs'
 import ServiceCard from '@/components/services/ServiceCard'
 import ServiceSlideup from '@/components/services/ServiceSlideup'

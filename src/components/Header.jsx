@@ -49,7 +49,7 @@ function Logo() {
   const handlePressStart = () => {
     pressTimer.current = setTimeout(() => {
       setPressing(true)
-    }, 600)
+    }, 900)
   }
 
   const handlePressEnd = () => {
@@ -214,7 +214,7 @@ function Avatar() {
   const handlePressStart = () => {
     pressTimer.current = setTimeout(() => {
       setLoginOpen(true)
-    }, 600)
+    }, 900)
   }
 
   const handlePressEnd = () => {
@@ -492,7 +492,7 @@ export default function Header() {
             gap: '12px',
             width: '100%',
             padding: '12px',
-            borderRadius: '12px',
+            borderRadius: '16px',
             background: isDark
               ? 'rgba(110,1,240,0.15)'
               : 'rgba(110,1,240,0.06)',
@@ -538,7 +538,7 @@ export default function Header() {
             gap: '12px',
             width: '100%',
             padding: '12px',
-            borderRadius: '12px',
+            borderRadius: '16px',
             background: isDark
               ? 'rgba(97,222,44,0.08)'
               : 'rgba(97,222,44,0.06)',

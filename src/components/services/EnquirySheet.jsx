@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { useEnquirySubmit } from '@/hooks/useEnquirySubmit'
+import { useEnquirySubmit } from '@/app/hooks/useEnquirySubmit'
 
 export default function EnquirySheet({ service, selectedPackage, onClose }) {
   const [name, setName] = useState('')

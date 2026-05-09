@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export function useService(serviceId) {
+export function useService(serviceId, fetchKey = 0) {
   const [service, setService] = useState(null)
   const [packages, setPackages] = useState([])
   const [deliverables, setDeliverables] = useState([])
@@ -11,6 +11,7 @@ export function useService(serviceId) {
     if (!serviceId) return
 
     const fetch = async () => {
+      setLoading(true)
       const [svcRes, pkgRes, delRes] = await Promise.all([
         supabase.from('services').select('*').eq('id', serviceId).single(),
         supabase.from('service_packages').select('*').eq('service_id', serviceId).order('order_index', { ascending: true }),
@@ -23,7 +24,7 @@ export function useService(serviceId) {
       setLoading(false)
     }
     fetch()
-  }, [serviceId])
+  }, [serviceId, fetchKey])
 
   return { service, packages, deliverables, loading }
 }

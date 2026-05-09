@@ -10,11 +10,57 @@ import StoryViewer from './StoryViewer'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-function ActionBar() {
+function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
+  const handleSave = () => {
+    onAction?.('Saved!')
+  }
+  
+  const handleShare = async () => {
+    if (navigator.share && story.media_url) {
+      try {
+        await navigator.share({
+          title: 'CKA Status',
+          text: story.caption || 'Check this out!',
+          url: window.location.href
+        })
+      } catch (err) {
+        console.log('Share dismissed')
+      }
+    }
+  }
+  
+  const handleDownload = async () => {
+    if (!story.media_url) return
+    try {
+      const response = await fetch(story.media_url)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cka-status-${story.id || Date.now()}.${story.media_type === 'video' ? 'mp4' : 'jpg'}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      onAction?.('Downloaded')
+    } catch (error) {
+      console.error('Download failed:', error)
+      onAction?.('Download failed')
+    }
+  }
+  
+  const handleBookmark = () => {
+    setBookmarked(!bookmarked)
+    onAction?.(bookmarked ? 'Removed bookmark' : 'Added bookmark')
+  }
   const actions = [
-    { icon: <Download size={16} />, label: 'Save' },
-    { icon: <Share2 size={16} />, label: 'Share' },
-    { icon: <Bookmark size={16} />, label: 'Bookmark' },
+    { icon: <Download size={16} />, label: 'Save', onClick: handleSave },
+    { 
+      icon: <Bookmark size={16} fill={bookmarked ? 'currentColor' : 'none'} />, 
+      label: 'Bookmark', 
+      onClick: handleBookmark 
+    },
+    { icon: <Share2 size={16} />, label: 'Share', onClick: handleShare },
   ]
 
   return (
@@ -33,8 +79,11 @@ function ActionBar() {
       {actions.map(({ icon, label }) => (
         <button
           key={label}
-          onClick={e => e.stopPropagation()}
-          style={{
+          onClick={e => {
+            e.stopPropagation()
+            action.onClick?.()
+          }}
+                    style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
@@ -62,12 +111,12 @@ function ActionBar() {
   )
 }
 
-function DailyStatus({ theme, onClick, hasUnseen }) {
-  const isDark = theme === 'dark'
+function DailyStatus({ theme, onClick, hasUnseen, onSaved, bookmarks, setBookmarks }) {  const isDark = theme === 'dark'
   const [slideIndex, setSlideIndex] = useState(0)
   const [fading, setFading] = useState(false)
 
   const [stories, setStories] = useState([])
+  const [showPeek, setShowPeek] = useState(false)
 
 useEffect(() => {
   supabase
@@ -90,9 +139,51 @@ useEffect(() => {
     return () => clearInterval(interval)
   }, [stories])
 
+  useEffect(() => {
+    if (!stories.length || stories.length < 2) return
+    
+    const peekInterval = setInterval(() => {
+      setShowPeek(true)
+      setTimeout(() => setShowPeek(false), 2000)  // Slide in, pause 2s, slide back
+    }, 5000)  // Repeat every 5 seconds
+    
+    const [touchStart, setTouchStart] = useState(0)
+const [touchEnd, setTouchEnd] = useState(0)
+
+    return () => clearInterval(peekInterval)
+  }, [stories])
+  
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+  
+  const handleTouchEnd = (e) => {
+    setTouchEnd(e.changedTouches[0].clientX)
+    handleSwipe()
+  }
+  
+  const handleSwipe = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50  // Swipe left = next
+    const isRightSwipe = distance < -50  // Swipe right = previous
+    
+    if (isLeftSwipe && slideIndex < stories.length - 1) {
+      setSlideIndex(slideIndex + 1)
+      setTouchStart(0)
+      setTouchEnd(0)
+    } else if (isRightSwipe && slideIndex > 0) {
+      setSlideIndex(slideIndex - 1)
+      setTouchStart(0)
+      setTouchEnd(0)
+    }
+  }
+
   return (
     <div
       onClick={onClick}
+      onTouchStart={handleTouchStart}
+  onTouchEnd={handleTouchEnd}
       style={{
         position: 'relative',
         width: '100%',
@@ -102,15 +193,39 @@ useEffect(() => {
         border: `1px solid ${isDark
           ? 'rgba(243,243,243,0.08)'
           : 'rgba(110,1,240,0.1)'}`,
-        cursor: 'pointer',
+        cursor: 'grab',
       }}
     >
+      {showPeek && stories.length > slideIndex + 1 && (
+  <div style={{
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+    zIndex: 1,
+  }}>
+    <img
+      src={stories[slideIndex + 1].media_url}
+      alt=""
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition: 'top',
+        animation: 'slideInFromLeft 0.4s ease-in-out, slideOutToLeft 0.4s ease-in-out 1.6s',
+      }}
+    />
+  </div>
+)}
       {(() => {
         const story = stories[slideIndex]
         if (!story) return null
         if (story.media_type === 'text') {
           return (
-            <div style={{
+            <div 
+            style={{
               position: 'absolute', inset: 0,
               background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -135,26 +250,18 @@ useEffect(() => {
               src={story.media_url}
               alt=""
               draggable={false}
-              style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                transform: 'scale(1)',
-                objectFit: 'cover',
-                pointerEvents: 'none', userSelect: 'none',
-                opacity: fading ? 0 : 1,
-                transition: 'opacity .88s ease',
-              }}
+              // NEW - ADD objectPosition:
+style={{
+  position: 'absolute', inset: 0,
+  width: '100%', height: '100%',
+  transform: 'scale(1)',
+  objectFit: 'cover',
+  objectPosition: 'top',  // CROP FROM TOP
+  pointerEvents: 'none', userSelect: 'none',
+  opacity: fading ? 0 : 1,
+  transition: 'opacity .88s ease',
+}}
             />
-            <div style={{
-              position: 'absolute',
-              bottom: 0, left: 0, right: 0,
-              height: '55%',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, black 60%)',
-              pointerEvents: 'none',
-            }} />
           </>
         )
       })()}
@@ -195,8 +302,17 @@ useEffect(() => {
         </div>
       )}
 
-      <ActionBar />
-    </div>
+<ActionBar 
+  story={stories[slideIndex]} 
+  bookmarked={bookmarks?.[stories[slideIndex]?.id] || false}
+  setBookmarked={(isBookmarked) => {
+    setBookmarks(prev => ({
+      ...prev,
+      [stories[slideIndex]?.id]: isBookmarked
+    }))
+  }}
+  onAction={onSaved}
+/>    </div>
   )
 }
 
@@ -330,6 +446,14 @@ export default function Bento() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [bentoHeight, setBentoHeight] = useState('calc(100dvh - 120px)')
   const [hasUnseen, setHasUnseen] = useState(false)
+  const [bookmarks, setBookmarks] = useState({})
+  const [toast, setToast] = useState(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   useEffect(() => {
     try {
@@ -339,6 +463,24 @@ export default function Bento() {
       // ignore
     }
   }, [])
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('cka-bookmarks')
+      if (saved) setBookmarks(JSON.parse(saved))
+    } catch {
+      // ignore
+    }
+  }, [])
+  
+  // ADD when bookmarks change:
+  useEffect(() => {
+    try {
+      localStorage.setItem('cka-bookmarks', JSON.stringify(bookmarks))
+    } catch {
+      // ignore
+    }
+  }, [bookmarks])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 1023px)')
@@ -398,11 +540,14 @@ export default function Bento() {
           overflow: 'hidden',
         }}>
           <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
-            <DailyStatus
-              theme={theme}
-              onClick={handleOpenStory}
-              hasUnseen={hasUnseen}
-            />
+          <DailyStatus
+  theme={theme}
+  onClick={handleOpenStory}
+  hasUnseen={hasUnseen}
+  onSaved={setToast}
+  bookmarks={bookmarks}
+  setBookmarks={setBookmarks}
+/>
 
             {isAdmin && (
               <button
@@ -472,11 +617,14 @@ export default function Bento() {
         overflow: 'hidden',
       }}>
         <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
-          <DailyStatus
-            theme={theme}
-            onClick={handleOpenStory}
-            hasUnseen={hasUnseen}
-          />
+        <DailyStatus
+  theme={theme}
+  onClick={handleOpenStory}
+  hasUnseen={hasUnseen}
+  onSaved={setToast}
+  bookmarks={bookmarks}
+  setBookmarks={setBookmarks}
+/>
 
           {isAdmin && (
             <button
@@ -526,7 +674,23 @@ export default function Bento() {
           onSuccess={handleUploadSuccess}
         />
       )}
-
+{toast && (
+  <div style={{
+    position: 'fixed',
+    bottom: '80px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'rgba(0,0,0,0.8)',
+    color: '#F3F3F3',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    zIndex: 50,
+    fontFamily: 'Inter, sans-serif',
+  }}>
+    {toast}
+  </div>
+)}
       <FloatingChat />
     </>
   )

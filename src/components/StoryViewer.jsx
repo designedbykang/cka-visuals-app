@@ -119,11 +119,55 @@ function StoryHeader({ story, onClose, onMenuToggle }) {
   )
 }
 
-function StoryMenu() {
+function StoryMenu({ story, bookmarked, setBookmarked, onAction }) 
+{  
+  const handleShare = async () => {
+    if (navigator.share && story.media_url) {
+      try {
+        await navigator.share({
+          title: 'CKA Status',
+          text: story.caption || 'Check this out!',
+          url: window.location.href
+        })
+      } catch (err) {
+        console.log('Share dismissed')
+      }
+    }
+  }
+  
+  const handleDownload = async () => {
+    if (!story.media_url) return
+    try {
+      const response = await fetch(story.media_url)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cka-status-${story.id}.${story.media_type === 'video' ? 'mp4' : 'jpg'}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      onAction?.('Downloaded')
+    } catch (error) {
+      console.error('Download failed:', error)
+      onAction?.('Download failed')
+    }
+  }
+  
+  const handleBookmark = () => {
+    setBookmarked(!bookmarked)
+    onAction?.(bookmarked ? 'Removed bookmark' : 'Added bookmark')
+  }
+  
   const items = [
-    { icon: <Share2 size={16} />, label: 'Share' },
-    { icon: <Download size={16} />, label: 'Download' },
-    { icon: <Bookmark size={16} />, label: 'Bookmark' },
+    { icon: <Share2 size={16} />, label: 'Share', onClick: handleShare },
+    { icon: <Download size={16} />, label: 'Download', onClick: handleDownload },
+    { 
+      icon: <Bookmark size={16} fill={bookmarked ? 'currentColor' : 'none'} />, 
+      label: 'Bookmark', 
+      onClick: handleBookmark 
+    },
   ]
 
   return (
@@ -155,9 +199,9 @@ function StoryMenu() {
             fontFamily: 'Inter, sans-serif',
             cursor: 'pointer',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(243,243,243,0.08)'}
           onMouseLeave={e => e.currentTarget.style.background = 'none'}
-        >
+          onClick={() => item.onClick?.()}
+          >          
           {icon}
           {label}
         </button>
@@ -240,8 +284,7 @@ function StoryFooter({ liked, onLike, caption }) {
   )
 }
 
-export default function StoryViewer({ onClose }) {
-  const [stories, setStories] = useState([])
+export default function StoryViewer({ onClose, initialBookmarks, onBookmarksChange }) {  const [stories, setStories] = useState([])
   const [current, setCurrent] = useState(0)
   const [progress, setProgress] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -250,6 +293,8 @@ export default function StoryViewer({ onClose }) {
   const [loading, setLoading] = useState(true)
   const [mediaLoading, setMediaLoading] = useState(false)
   const progressRef = useRef(0)
+  const [bookmarks, setBookmarks] = useState(initialBookmarks || {})
+  const [actionMessage, setActionMessage] = useState(null)
 
   useEffect(() => {
     const fetchStories = async () => {
@@ -272,6 +317,16 @@ export default function StoryViewer({ onClose }) {
   }, [])
 
   const story = stories[current]
+
+  useEffect(() => {
+    onBookmarksChange?.(bookmarks)
+  }, [bookmarks, onBookmarksChange])
+  
+  useEffect(() => {
+    if (!actionMessage) return
+    const timer = setTimeout(() => setActionMessage(null), 2000)
+    return () => clearTimeout(timer)
+  }, [actionMessage])
 
   useEffect(() => {
     if (paused || loading || mediaLoading || stories.length === 0) return
@@ -376,11 +431,20 @@ export default function StoryViewer({ onClose }) {
       </div>
 
       {menuOpen && (
-        <div onClick={e => e.stopPropagation()}>
-          <StoryMenu />
-        </div>
-      )}
-
+  <div onClick={e => e.stopPropagation()}>
+    <StoryMenu 
+      story={story} 
+      bookmarked={bookmarks?.[story.id] || false}
+      setBookmarked={(isBookmarked) => {
+        setBookmarks(prev => ({
+          ...prev,
+          [story.id]: isBookmarked
+        }))
+      }}
+      onAction={setActionMessage}
+    />
+  </div>
+)}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -423,6 +487,7 @@ export default function StoryViewer({ onClose }) {
     draggable={false}
   />
 )}
+
 {mediaLoading && (
   <div style={{
     position: 'absolute',
@@ -461,6 +526,7 @@ export default function StoryViewer({ onClose }) {
             </div>
           </div>
         )}
+        
       </div>
 
       <div onClick={e => e.stopPropagation()}>
@@ -470,6 +536,23 @@ export default function StoryViewer({ onClose }) {
           caption={story.caption}
         />
       </div>
+      {actionMessage && (
+  <div style={{
+    position: 'absolute',
+    bottom: '80px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'rgba(0,0,0,0.8)',
+    color: '#F3F3F3',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    zIndex: 50,
+    fontFamily: 'Inter, sans-serif',
+  }}>
+    {actionMessage}
+  </div>
+)}
     </div>
   )
 }

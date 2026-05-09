@@ -1,4 +1,4 @@
-export const WHATSAPP_NUMBER = '+237671122318'
+export const WHATSAPP_NUMBER = '237671122318'
 
 export function buildMessage({ name, description, serviceName, packageName, price, currency = 'XAF' }) {
   return [

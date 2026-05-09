@@ -1,10 +1,9 @@
 'use client'
 
 import { useServicesContext } from '@/context/ServicesContext'
-import { useCategoryServices } from '@/hooks/useCategoryServices'
-import { deriveTagsFromServices } from '@/hooks/useServiceTags'
-import CategoryBand from '@/components/services/CategoryBand'
-import ServiceTags from '@/components/services/ServiceTags'
+import { useCategoryServices } from '@/app/hooks/useCategoryServices'
+import { useServiceCategories } from '@/app/hooks/useServiceCategories'
+import CategoryTabs from '@/components/services/CategoryTabs'
 import ServiceCard from '@/components/services/ServiceCard'
 import ServiceSlideup from '@/components/services/ServiceSlideup'
 import { ArrowLeft } from 'lucide-react'
@@ -12,19 +11,26 @@ import { useRouter } from 'next/navigation'
 
 function ServiceGrid({ categoryId }) {
   const { services, loading } = useCategoryServices(categoryId)
+  const { categories } = useServiceCategories()
 
   if (!categoryId) {
     return (
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        gap: '10px', padding: '60px 20px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        padding: '40px 20px',
       }}>
         <p style={{
-          color: 'rgba(243,243,243,0.3)', fontSize: '15px',
-          fontFamily: 'Inter, sans-serif', textAlign: 'center',
+          color: 'var(--text-secondary)',
+          fontSize: '15px',
+          fontFamily: 'Inter, sans-serif',
+          textAlign: 'center',
         }}>
-          Pick a category above to explore services.
+          {categories.length > 0 ? 'Select a category above to explore services.' : 'Loading…'}
         </p>
       </div>
     )
@@ -32,9 +38,9 @@ function ServiceGrid({ categoryId }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 16px' }}>
         {[1, 2, 3].map(i => (
-          <div key={i} style={{ height: '120px', borderRadius: '20px', background: '#111118' }} />
+          <div key={i} style={{ height: '120px', borderRadius: '16px', background: 'var(--bg-card)' }} />
         ))}
       </div>
     )
@@ -42,29 +48,20 @@ function ServiceGrid({ categoryId }) {
 
   if (!services.length) {
     return (
-      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <p style={{ color: 'rgba(243,243,243,0.3)', fontSize: '15px', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', fontFamily: 'Inter, sans-serif' }}>
           No services in this category yet.
         </p>
       </div>
     )
   }
 
-  const tags = deriveTagsFromServices(services)
-
   return (
-    <>
-      {tags.length > 0 && (
-        <div style={{ paddingBottom: '16px' }}>
-          <ServiceTags tags={tags} />
-        </div>
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 20px' }}>
-        {services.map(service => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
-      </div>
-    </>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 16px' }}>
+      {services.map(service => (
+        <ServiceCard key={service.id} service={service} />
+      ))}
+    </div>
   )
 }
 
@@ -88,7 +85,7 @@ export default function ServicesPage() {
         background: 'var(--bg-primary)',
         position: 'sticky',
         top: 0,
-        zIndex: 20,
+        zIndex: 10,
       }}>
         <button
           onClick={() => router.back()}
@@ -102,18 +99,23 @@ export default function ServicesPage() {
           <ArrowLeft size={18} />
         </button>
         <h1 style={{
-          color: '#F3F3F3', fontSize: '20px', fontWeight: '700',
-          fontFamily: 'Inter, sans-serif', margin: 0, letterSpacing: '-0.3px',
+          color: 'var(--text-primary)',
+          fontSize: '20px',
+          fontWeight: '700',
+          fontFamily: 'Inter, sans-serif',
+          margin: 0,
         }}>
           Services
         </h1>
       </div>
 
-      {/* Category selector */}
-      <CategoryBand />
+      {/* Category tabs */}
+      <div style={{ paddingBottom: '16px' }}>
+        <CategoryTabs />
+      </div>
 
-      {/* Service grid + tag pills */}
-      <div style={{ flex: 1, paddingTop: '16px', paddingBottom: '60px' }}>
+      {/* Service grid */}
+      <div style={{ flex: 1, paddingBottom: '40px' }}>
         <ServiceGrid categoryId={selectedCategoryId} />
       </div>
 
@@ -121,3 +123,4 @@ export default function ServicesPage() {
     </div>
   )
 }
+

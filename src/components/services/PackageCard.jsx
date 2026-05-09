@@ -1,45 +1,74 @@
 'use client'
 
-import { useRef } from 'react'
-
-export default function PackageCard({ pkg, selected, onSelect, onLongPress }) {
-  const timer = useRef(null)
-  const price = typeof pkg.price === 'number' ? pkg.price.toLocaleString() : pkg.price
-
-  function startPress() {
-    if (onLongPress) timer.current = setTimeout(() => onLongPress(pkg), 600)
-  }
-  function cancelPress() {
-    clearTimeout(timer.current)
-  }
+export default function PackageCard({ pkg, selected, onSelect }) {
+  const price = typeof pkg.price === 'number'
+    ? pkg.price.toLocaleString()
+    : pkg.price
 
   return (
     <button
       onClick={() => onSelect(pkg)}
-      onMouseDown={startPress}
-      onMouseUp={cancelPress}
-      onMouseLeave={cancelPress}
-      onTouchStart={startPress}
-      onTouchEnd={cancelPress}
       style={{
-        width: '100%', textAlign: 'left', padding: '16px', borderRadius: '14px',
-        background: selected ? 'rgba(110,1,240,0.12)' : 'var(--bg-card)',
-        border: selected ? '1.5px solid rgba(110,1,240,0.6)' : '1px solid var(--bg-card-border)',
-        cursor: 'pointer', transition: 'all 0.18s ease',
-        display: 'flex', flexDirection: 'column', gap: '6px',
-        userSelect: 'none',
+        width: '100%',
+        textAlign: 'left',
+        padding: '16px 18px',
+        borderRadius: '16px',
+        background: selected
+          ? 'rgba(255,31,184,0.09)'
+          : 'rgba(255,255,255,0.04)',
+        border: selected
+          ? '1.5px solid rgba(255,31,184,0.45)'
+          : '1px solid rgba(255,255,255,0.07)',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600', fontFamily: 'Inter, sans-serif' }}>
+      {selected && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, #FF1FB8, #9E56F5)',
+        }} />
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+        <span style={{
+          color: '#F3F3F3',
+          fontSize: '15px',
+          fontWeight: '600',
+          fontFamily: 'Inter, sans-serif',
+          letterSpacing: '-0.1px',
+        }}>
           {pkg.name}
         </span>
-        <span style={{ color: selected ? '#9E56F5' : 'var(--text-primary)', fontSize: '15px', fontWeight: '700', fontFamily: 'Inter, sans-serif' }}>
-          {price} <span style={{ fontSize: '11px', fontWeight: '500', opacity: 0.7 }}>{pkg.currency}</span>
+        <span style={{
+          color: selected ? '#C8FF00' : 'rgba(243,243,243,0.65)',
+          fontSize: '15px',
+          fontWeight: '700',
+          fontFamily: 'Inter, sans-serif',
+          flexShrink: 0,
+          letterSpacing: '-0.2px',
+        }}>
+          {price}{' '}
+          <span style={{ fontSize: '11px', fontWeight: '500', opacity: 0.6 }}>{pkg.currency}</span>
         </span>
       </div>
+
       {pkg.description && (
-        <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontFamily: 'Inter, sans-serif', lineHeight: '1.5' }}>
+        <span style={{
+          color: 'rgba(243,243,243,0.38)',
+          fontSize: '13px',
+          fontFamily: 'Inter, sans-serif',
+          lineHeight: '1.5',
+        }}>
           {pkg.description}
         </span>
       )}

@@ -237,8 +237,8 @@ export default function SearchBar() {
         display: 'flex',
         alignItems: 'center',
         height: '52px',
-        borderRadius: '4px',
-        border: `2px solid ${focused
+        borderRadius: '100px',
+        border: `1px solid ${focused
           ? '#61DE2C'
           : hasActiveFilters
             ? '#6E01F0'

@@ -317,7 +317,9 @@ style={{
 
 const CARD_LINKS = {
   Services: '/services',
+  Portfolio: '/portfolio',
 }
+
 
 function GridCard({ label, theme }) {
   const isDark = theme === 'dark'

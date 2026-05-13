@@ -74,20 +74,20 @@ export default function ServicePage() {
         maxWidth: '100%',
       }}>
         {/* Image carousel section */}
-        <div style={{ width: '100%' }}>
-          <ImageCarousel
-            images={service.hero_image_url ? [service.hero_image_url] : []}
-            serviceName={service.name}
-          />
-        </div>
+        {service.hero_image_url && (
+          <div style={{ width: '100%' }}>
+            <ImageCarousel
+              images={[service.hero_image_url]}
+              serviceName={service.name}
+            />
+          </div>
+        )}
 
         {/* Title section */}
-        <div>
-          <ServiceTitle
-            title={service.name}
-            subtitle={service.tagline || ''}
-          />
-        </div>
+        <ServiceTitle
+          title={service.name}
+          subtitle={service.tagline || ''}
+        />
 
         {/* Description section */}
         {service.description && (

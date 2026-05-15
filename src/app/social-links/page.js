@@ -1,8 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { link,} from '@icons-pack/react-simple-icons';
-import { ArrowLeft, Music2, Globe,} from 'lucide-react'
+import { Link, ArrowLeft, Music2, Globe,} from 'lucide-react'
 import PageLoader from '@/components/PageLoader'
 
 const LINKS = [

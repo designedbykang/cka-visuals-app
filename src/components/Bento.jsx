@@ -290,10 +290,8 @@ useEffect(() => {
 
 const CARD_LINKS = {
   Services: '/services',
-  Portfolio: '/portfolio',
-  Content: '/blog',
-  Portal: '/portal',
 }
+
 
 function GridCard({ label, theme }) {
   const isDark = theme === 'dark'

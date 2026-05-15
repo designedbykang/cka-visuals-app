@@ -5,7 +5,7 @@ import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 
 const PLACEHOLDERS = [
-  'Browse Services...',
+  'Buy Services...',
   'Find Products...',
   'Start a Project...',
   'Browse Portfolio...',
@@ -13,10 +13,8 @@ const PLACEHOLDERS = [
 
 const FILTERS = {
   Category: ['Services', 'Portfolio', 'Content'],
-  Location: ['Lekki', 'Yaba', 'Ikeja', 'Surulere', 'VI'],
-  Status: ['Open', 'Closed', 'Active Today'],
+  Location: ['Lekki', 'Molyko', 'Ikeja', 'Logpom', 'Osu'],
 }
-
 function FilterButton({ onToggle, hasActive, theme }) {
   return (
     <button
@@ -35,7 +33,7 @@ function FilterButton({ onToggle, hasActive, theme }) {
         cursor: 'pointer',
         flexShrink: 0,
         transition: 'all 0.2s ease',
-        borderRadius: '14px 0 0 14px',
+        borderRadius: '4px 0 0 4px',
       }}
     >
       <SlidersHorizontal
@@ -62,7 +60,7 @@ function SearchIconButton({ theme }) {
           : '#E4E4E7'}`,
         cursor: 'pointer',
         flexShrink: 0,
-        borderRadius: '0 14px 14px 0',
+        borderRadius: '0 4px 4px 0',
       }}
     >
       <Search
@@ -82,8 +80,8 @@ function FilterDropdown({ active, onSelect, theme }) {
       left: 0,
       right: 0,
       background: isDark ? '#1A1A1A' : '#F3F3F3',
-      border: `1px solid ${isDark ? 'rgba(97,222,44,0.2)' : '#E4E4E7'}`,
-      borderRadius: '16px',
+      border: `1px solid ${isDark ? 'rgba(97,222,44,0.2)' : 'rgba(110,1,240,0.2)'}`,
+      borderRadius: '6px',
       padding: '20px',
       zIndex: 40,
       display: 'flex',
@@ -115,7 +113,7 @@ function FilterDropdown({ active, onSelect, theme }) {
                   onClick={() => onSelect(group, option)}
                   style={{
                     padding: '8px 14px',
-                    borderRadius: '10px',
+                    borderRadius: '2px',
                     background: isActive
                       ? '#6E01F0'
                       : isDark
@@ -241,8 +239,8 @@ export default function SearchBar() {
         display: 'flex',
         alignItems: 'center',
         height: '52px',
-        borderRadius: '14px',
-        border: `2px solid ${focused
+        borderRadius: '100px',
+        border: `1px solid ${focused
           ? '#61DE2C'
           : hasActiveFilters
             ? '#6E01F0'

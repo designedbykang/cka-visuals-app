@@ -62,7 +62,8 @@ export default function PortfolioNav({ screen = 'grid' }) {
           alt="CKA Visuals"
           style={{
             height: '28px',
-            width: 'auto',
+            width: '100%',
+            maxWidth: '100%',
             objectFit: 'contain',
             objectPosition: 'left center',
             pointerEvents: 'none',

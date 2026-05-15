@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import LoginSheet from './LoginSheet'
 import { useTheme } from '@/context/ThemeContext'
 import {
-  Menu, X, LayoutGrid, Grid3x3, Store, Link,
+  Menu, X, LayoutGrid, Store, Link,
   MessageCircle, Briefcase, Monitor, FileText,
-  Moon, Sun
+  Moon, Sun, Home, HelpCircle, Scale,
 } from 'lucide-react'
 
 function ThemeToggle({ theme, onToggle }) {
@@ -117,11 +118,12 @@ function HamburgerButton({ open, onToggle }) {
 }
 
 function DesktopNav() {
+  const router = useRouter()
   const links = [
-    { label: 'Services', icon: <Briefcase size={16} /> },
-    { label: 'Portfolio', icon: <Monitor size={16} /> },
-    { label: 'Content', icon: <FileText size={16} /> },
-    { label: 'Portal', icon: <MessageCircle size={16} /> },
+    { label: 'Services', href: '/services', icon: <Briefcase size={16} /> },
+    { label: 'Portfolio', href: '/portfolio', icon: <Monitor size={16} /> },
+    { label: 'Content', href: '/content', icon: <FileText size={16} /> },
+    { label: 'Portal', href: '/portal', icon: <MessageCircle size={16} /> },
   ]
 
   return (
@@ -133,9 +135,10 @@ function DesktopNav() {
       left: '50%',
       transform: 'translateX(-50%)',
     }}>
-      {links.map(({ label, icon }) => (
+      {links.map(({ label, href, icon }) => (
         <button
           key={label}
+          onClick={() => router.push(href)}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -304,6 +307,7 @@ function Avatar() {
 export default function Header() {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [gridOpen, setGridOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
@@ -318,265 +322,361 @@ export default function Header() {
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (menuOpen && !e.target.closest('header')) {
-        setMenuOpen(false)
-      }
       if (gridOpen && !e.target.closest('header')) {
         setGridOpen(false)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [menuOpen, gridOpen])  
+  }, [gridOpen])
 
-  // Shared dropdown item style
-  const menuItemStyle = {
-    textAlign: 'left',
-    color: isDark ? '#F3F3F3' : '#120F0F',
-    fontSize: '18px',
-    fontWeight: '500',
-    opacity: 0.85,
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontFamily: 'Inter, sans-serif',
-  }
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
+  const drawerBg = isDark ? '#1A1A1A' : '#FFFFFF'
+  const drawerBorder = isDark ? 'rgba(243,243,243,0.08)' : 'rgba(18,15,15,0.08)'
   const dropdownBg = isDark ? '#1A1A1A' : '#F3F3F3'
   const dropdownBorder = isDark
     ? 'rgba(97,222,44,0.15)'
     : 'rgba(110,1,240,0.15)'
 
+  const navItems = [
+    { label: 'Home', href: '/', icon: <Home size={20} /> },
+    { label: 'Services', href: '/services', icon: <Briefcase size={20} /> },
+    { label: 'Portfolio', href: '/portfolio', icon: <Monitor size={20} /> },
+    { label: 'Content', href: '/content', icon: <FileText size={20} /> },
+    { label: 'Chat', href: null, icon: <MessageCircle size={20} /> },
+    { label: 'FAQ', href: null, icon: <HelpCircle size={20} /> },
+    { label: 'Legal', href: '/legal', icon: <Scale size={20} /> },
+  ]
+
+  const handleNavItem = (href) => {
+    setMenuOpen(false)
+    if (href) router.push(href)
+  }
+
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      left: 0,
-      right: 0,
-      width: '100%',
-      background: '#6E01F0',
-      zIndex: 50,
-    }}>
+    <>
+      {/* Left drawer overlay */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            zIndex: 200,
+          }}
+        />
+      )}
 
-      {/* Main Row */}
+      {/* Left drawer panel */}
       <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '100dvh',
+        width: 'min(280px, 80vw)',
+        background: drawerBg,
+        borderRight: `1px solid ${drawerBorder}`,
+        zIndex: 201,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 'clamp(8px, 2vw, 14px) clamp(12px, 3vw, 28px)',
-        height: 'clamp(56px, 7vw, 68px)',
-        position: 'relative',
+        flexDirection: 'column',
+        transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}>
-
-        {/* Left */}
+        {/* Drawer header */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
-          zIndex: 1,
+          justifyContent: 'space-between',
+          padding: '20px 20px 16px',
+          borderBottom: `1px solid ${drawerBorder}`,
+          flexShrink: 0,
         }}>
-          <div style={{ display: isMobile ? 'flex' : 'none' }}>
-            <HamburgerButton
-              open={menuOpen}
-              onToggle={() => setMenuOpen(!menuOpen)}
-            />
-          </div>
-          <Logo />
+          <img
+            src="/logo.png"
+            alt="CKA Visuals"
+            style={{
+              height: '28px',
+              width: 'auto',
+              objectFit: 'contain',
+              filter: isDark ? 'none' : 'none',
+            }}
+          />
+          <button
+            onClick={() => setMenuOpen(false)}
+            style={{
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isDark ? 'rgba(243,243,243,0.06)' : 'rgba(18,15,15,0.06)',
+              border: `1px solid ${drawerBorder}`,
+              borderRadius: '10px',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <X size={18} color={isDark ? '#F3F3F3' : '#120F0F'} />
+          </button>
         </div>
 
-        {/* Center */}
-        {!isMobile && <DesktopNav />}
-
-        {/* Right */}
+        {/* Nav items */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          zIndex: 1,
-        }}>
-          <div style={{ display: isMobile ? 'flex' : 'none' }}>
-            <GridButton onToggle={() => setGridOpen(!gridOpen)} />
-          </div>
-          {!isMobile && (
-            <DesktopGridButton onToggle={() => setGridOpen(!gridOpen)} />
-          )}
-          {!isMobile && (
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          )}
-          <Avatar />
-        </div>
-      </div>
-
-      {/* Mobile Hamburger Dropdown */}
-      {menuOpen && isMobile && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          background: dropdownBg,
-          borderTop: `1px solid ${dropdownBorder}`,
-          borderBottom: `1px solid ${dropdownBorder}`,
-          padding: '24px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
-          zIndex: 50,
-          boxShadow: isDark
-            ? '0 8px 32px rgba(0,0,0,0.4)'
-            : '0 8px 32px rgba(110,1,240,0.1)',
+          padding: '12px 12px',
+          flex: 1,
+          gap: '2px',
         }}>
-          {['Home', 'Services', 'Portfolio', 'Content', 'Chat', 'FAQ', 'Legal'].map(item => (
-            <button key={item} style={menuItemStyle}>
-              {item}
+          {navItems.map(({ label, href, icon }) => (
+            <button
+              key={label}
+              onClick={() => handleNavItem(href)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                width: '100%',
+                padding: '14px 12px',
+                borderRadius: '12px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'background 0.15s ease',
+                color: isDark ? '#F3F3F3' : '#120F0F',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = isDark ? 'rgba(243,243,243,0.06)' : 'rgba(18,15,15,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >
+              <span style={{ opacity: 0.6, flexShrink: 0 }}>{icon}</span>
+              <span style={{
+                fontSize: '17px',
+                fontWeight: '500',
+                fontFamily: 'Inter, sans-serif',
+              }}>
+                {label}
+              </span>
             </button>
           ))}
+        </div>
 
-          {/* Divider */}
-          <div style={{
-            height: '1px',
-            background: dropdownBorder,
-          }} />
-
-          {/* Theme toggle row */}
+        {/* Divider + theme toggle */}
+        <div style={{
+          borderTop: `1px solid ${drawerBorder}`,
+          padding: '16px 20px 32px',
+          flexShrink: 0,
+        }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
             <span style={{
-              color: isDark ? '#F3F3F3' : '#120F0F',
-              fontSize: '16px',
+              color: isDark ? 'rgba(243,243,243,0.6)' : 'rgba(18,15,15,0.6)',
+              fontSize: '14px',
               fontWeight: '500',
               fontFamily: 'Inter, sans-serif',
             }}>
-              {isDark ? 'Light Mode' : 'Dark Mode'}
+              {isDark ? 'Switch to Light' : 'Switch to Dark'}
             </span>
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Grid Dropdown */}
-      {gridOpen && (
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        background: '#6E01F0',
+        zIndex: 50,
+      }}>
+
+        {/* Main Row */}
         <div style={{
-          position: 'absolute',
-          top: '100%',
-          right: 'clamp(12px, 3vw, 28px)',
-          width: isMobile ? '220px' : '260px',
-          background: dropdownBg,
-          border: `1px solid ${dropdownBorder}`,
-          borderRadius: '0 0 20px 20px',
-          padding: '20px',
-          zIndex: 50,
-          boxShadow: isDark
-            ? '0 8px 32px rgba(0,0,0,0.4)'
-            : '0 8px 32px rgba(110,1,240,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: 'clamp(8px, 2vw, 14px) clamp(12px, 3vw, 28px)',
+          height: 'clamp(56px, 7vw, 68px)',
+          position: 'relative',
         }}>
-          <p style={{
-            color: isDark ? '#CFAAFA' : '#6E01F0',
-            fontSize: '11px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            marginBottom: '16px',
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: '600',
-          }}>
-            Quick Access
-          </p>
 
-          {/* Store */}
-          <button style={{
+          {/* Left */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            width: '100%',
-            padding: '12px',
-            borderRadius: '16px',
-            background: isDark
-              ? 'rgba(110,1,240,0.15)'
-              : 'rgba(110,1,240,0.06)',
-            border: `1px solid ${isDark
-              ? 'rgba(110,1,240,0.3)'
-              : 'rgba(110,1,240,0.2)'}`,
-            marginBottom: '10px',
-            cursor: 'pointer',
-            color: isDark ? '#F3F3F3' : '#120F0F',
-            fontFamily: 'Inter, sans-serif',
+            gap: '10px',
+            zIndex: 1,
           }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'rgba(110,1,240,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Store size={18} color="#CFAAFA" />
+            <div style={{ display: isMobile ? 'flex' : 'none' }}>
+              <HamburgerButton
+                open={menuOpen}
+                onToggle={() => setMenuOpen(!menuOpen)}
+              />
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                margin: 0,
-                color: isDark ? '#F3F3F3' : '#120F0F',
-              }}>Store</p>
-              <p style={{
-                fontSize: '11px',
-                margin: 0,
-                color: isDark ? 'rgba(243,243,243,0.5)' : 'rgba(18,15,15,0.5)',
-              }}>Marketplace</p>
-            </div>
-          </button>
+            <Logo />
+          </div>
 
-          {/* LinkTree */}
-          <button style={{
+          {/* Center */}
+          {!isMobile && <DesktopNav />}
+
+          {/* Right */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            width: '100%',
-            padding: '12px',
-            borderRadius: '16px',
-            background: isDark
-              ? 'rgba(97,222,44,0.08)'
-              : 'rgba(97,222,44,0.06)',
-            border: `1px solid ${isDark
-              ? 'rgba(97,222,44,0.2)'
-              : 'rgba(97,222,44,0.3)'}`,
-            cursor: 'pointer',
-            color: isDark ? '#F3F3F3' : '#120F0F',
-            fontFamily: 'Inter, sans-serif',
+            gap: '8px',
+            zIndex: 1,
           }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'rgba(97,222,44,0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Link size={18} color="#61DE2C" />
+            <div style={{ display: isMobile ? 'flex' : 'none' }}>
+              <GridButton onToggle={() => setGridOpen(!gridOpen)} />
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                margin: 0,
-                color: isDark ? '#F3F3F3' : '#120F0F',
-              }}>LinkTree</p>
-              <p style={{
-                fontSize: '11px',
-                margin: 0,
-                color: isDark ? 'rgba(243,243,243,0.5)' : 'rgba(18,15,15,0.5)',
-              }}>Social Links</p>
-            </div>
-          </button>
+            {!isMobile && (
+              <DesktopGridButton onToggle={() => setGridOpen(!gridOpen)} />
+            )}
+            {!isMobile && (
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            )}
+            <Avatar />
+          </div>
         </div>
-      )}
-    </header>
+
+        {/* Grid Dropdown */}
+        {gridOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: 'clamp(12px, 3vw, 28px)',
+            width: isMobile ? '220px' : '260px',
+            background: dropdownBg,
+            border: `1px solid ${dropdownBorder}`,
+            borderRadius: '0 0 20px 20px',
+            padding: '20px',
+            zIndex: 50,
+            boxShadow: isDark
+              ? '0 8px 32px rgba(0,0,0,0.4)'
+              : '0 8px 32px rgba(110,1,240,0.1)',
+          }}>
+            <p style={{
+              color: isDark ? '#CFAAFA' : '#6E01F0',
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              marginBottom: '16px',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: '600',
+            }}>
+              Quick Access
+            </p>
+
+            {/* Store */}
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              width: '100%',
+              padding: '12px',
+              borderRadius: '16px',
+              background: isDark
+                ? 'rgba(110,1,240,0.15)'
+                : 'rgba(110,1,240,0.06)',
+              border: `1px solid ${isDark
+                ? 'rgba(110,1,240,0.3)'
+                : 'rgba(110,1,240,0.2)'}`,
+              marginBottom: '10px',
+              cursor: 'pointer',
+              color: isDark ? '#F3F3F3' : '#120F0F',
+              fontFamily: 'Inter, sans-serif',
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'rgba(110,1,240,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Store size={18} color="#CFAAFA" />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  margin: 0,
+                  color: isDark ? '#F3F3F3' : '#120F0F',
+                }}>Store</p>
+                <p style={{
+                  fontSize: '11px',
+                  margin: 0,
+                  color: isDark ? 'rgba(243,243,243,0.5)' : 'rgba(18,15,15,0.5)',
+                }}>Marketplace</p>
+              </div>
+            </button>
+
+            {/* LinkTree */}
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              width: '100%',
+              padding: '12px',
+              borderRadius: '16px',
+              background: isDark
+                ? 'rgba(97,222,44,0.08)'
+                : 'rgba(97,222,44,0.06)',
+              border: `1px solid ${isDark
+                ? 'rgba(97,222,44,0.2)'
+                : 'rgba(97,222,44,0.3)'}`,
+              cursor: 'pointer',
+              color: isDark ? '#F3F3F3' : '#120F0F',
+              fontFamily: 'Inter, sans-serif',
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'rgba(97,222,44,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Link size={18} color="#61DE2C" />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  margin: 0,
+                  color: isDark ? '#F3F3F3' : '#120F0F',
+                }}>LinkTree</p>
+                <p style={{
+                  fontSize: '11px',
+                  margin: 0,
+                  color: isDark ? 'rgba(243,243,243,0.5)' : 'rgba(18,15,15,0.5)',
+                }}>Social Links</p>
+              </div>
+            </button>
+          </div>
+        )}
+      </header>
+    </>
   )
 }

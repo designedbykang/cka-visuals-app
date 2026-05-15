@@ -1,17 +1,13 @@
 'use client'
 
 export default function PortfolioGridCard({ piece, onTap, index }) {
-  // Checkerboard offset — even index cards pushed down
-  const offset = index % 2 === 1 ? '32px' : '0px'
-
   return (
     <div
       onClick={() => onTap(piece)}
       style={{
-        marginTop: offset,
         width: '100%',
         aspectRatio: '2/3',
-        borderRadius: '4px',
+        borderRadius: 0,
         overflow: 'hidden',
         cursor: 'pointer',
         position: 'relative',

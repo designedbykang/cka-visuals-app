@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useService } from '@/app/hooks/useService'
 import { useServicesContext } from '@/context/ServicesContext'
-import { Check } from 'lucide-react'
+import { Check, ArrowLeft } from 'lucide-react'
 
 // Placeholder description slides until description_slides field exists in DB
 const LOREM_SLIDES = [
@@ -106,7 +106,7 @@ function DescriptionCarousel({ slides }) {
         }}
       >
         <p style={{
-          color: 'rgba(243,243,243,0.65)',
+          color: 'var(--text-secondary)',
           fontSize: '15px',
           fontWeight: '400',
           fontFamily: 'Inter, sans-serif',
@@ -158,8 +158,8 @@ function PackageBox({ pkg, selected, onSelect }) {
         borderRadius: '16px',
         border: selected
           ? '1.5px solid #33D0C2'
-          : '1.5px solid rgba(255,255,255,0.1)',
-        background: '#1A1A28',
+          : '1.5px solid var(--bg-card-border)',
+        background: 'var(--bg-card)',
         padding: '20px 20px 20px 20px',
         cursor: 'pointer',
         transition: 'border-color 0.15s ease',
@@ -197,7 +197,7 @@ function PackageBox({ pkg, selected, onSelect }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {/* Price */}
           <span style={{
-            color: '#F3F3F3',
+            color: 'var(--text-primary)',
             fontSize: '26px',
             fontWeight: '800',
             fontFamily: 'Inter, sans-serif',
@@ -238,7 +238,7 @@ function PackageBox({ pkg, selected, onSelect }) {
           background: selected ? 'rgba(51,208,194,0.15)' : 'transparent',
           border: selected
             ? '1.5px solid #33D0C2'
-            : '1.5px solid rgba(255,255,255,0.12)',
+            : '1.5px solid var(--bg-card-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -271,7 +271,7 @@ export default function ServiceDetailPage() {
     return (
       <div style={{
         minHeight: '100dvh',
-        background: '#080809',
+        background: 'var(--bg-primary)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -293,26 +293,49 @@ export default function ServiceDetailPage() {
   return (
     <div style={{
       minHeight: '100dvh',
-      background: '#080809',
+      background: 'var(--bg-primary)',
       display: 'flex',
       flexDirection: 'column',
     }}>
 
-      {/* Top band — service name */}
+      {/* Top band — back button + service name */}
       <div style={{
         background: '#6E01F0',
         padding: '52px 20px 16px',
-        textAlign: 'center',
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative',
       }}>
+        <button
+          onClick={() => router.back()}
+          style={{
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(243,243,243,0.15)',
+            border: '1px solid rgba(243,243,243,0.2)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            flexShrink: 0,
+            position: 'absolute',
+            left: '20px',
+          }}
+          aria-label="Go back"
+        >
+          <ArrowLeft size={20} color="#F3F3F3" />
+        </button>
         <h1 style={{
           color: '#F3F3F3',
           fontSize: '22px',
           fontWeight: '900',
           fontFamily: 'Inter, sans-serif',
-          margin: 0,
+          margin: '0 auto',
           letterSpacing: '2px',
           textTransform: 'uppercase',
+          textAlign: 'center',
         }}>
           {service.name}
         </h1>
@@ -334,7 +357,7 @@ export default function ServiceDetailPage() {
       {/* Content zone */}
       <div style={{
         flex: 1,
-        background: '#0D0D10',
+        background: 'var(--bg-primary)',
         display: 'flex',
         flexDirection: 'column',
         paddingBottom: '40px',
@@ -343,7 +366,7 @@ export default function ServiceDetailPage() {
         {/* Headline */}
         <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
           <h2 style={{
-            color: '#F3F3F3',
+            color: 'var(--text-primary)',
             fontSize: '22px',
             fontWeight: '700',
             fontFamily: 'Inter, sans-serif',

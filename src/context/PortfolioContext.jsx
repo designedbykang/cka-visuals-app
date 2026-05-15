@@ -27,7 +27,6 @@ export function PortfolioProvider({ children }) {
     setActiveImageIndex(0)
     setFilmstripOpen(false)
     setLiteratureOpen(false)
-    setWayfindingPiece(piece)
   }, [])
 
   const dismissWayfinding = useCallback(() => {

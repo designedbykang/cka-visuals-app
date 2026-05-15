@@ -53,7 +53,7 @@ export default function CategoryBand() {
       </button>
 
       {sheetOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
           <div
             style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
             onClick={() => setSheetOpen(false)}
@@ -61,19 +61,17 @@ export default function CategoryBand() {
           <div style={{
             position: 'relative',
             background: 'var(--bg-primary)',
-            borderRadius: '24px 24px 0 0',
-            paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+            borderRadius: '0 0 24px 24px',
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-              <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--bg-card-border)' }} />
-            </div>
             <p style={{
               color: 'var(--text-secondary)',
               fontSize: '12px',
               fontFamily: 'Inter, sans-serif',
               textTransform: 'uppercase',
               letterSpacing: '1.2px',
-              padding: '12px 20px 8px',
+              padding: '20px 20px 8px',
               margin: 0,
             }}>
               Category
@@ -106,7 +104,7 @@ export default function CategoryBand() {
                 {cat.id === selectedCategoryId && <Check size={16} color="#6E01F0" />}
               </button>
             ))}
-            <div style={{ height: '16px' }} />
+            <div style={{ height: '20px' }} />
           </div>
         </div>
       )}

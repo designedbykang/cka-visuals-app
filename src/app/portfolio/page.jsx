@@ -27,10 +27,10 @@ function PortfolioGrid({ categoryId, categorySlug }) {
 
   return (
     <div style={{
-      padding: '100px 12px 120px',
+      padding: '0 0 80px',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gap: '8px',
+      gap: 0,
       alignItems: 'start',
     }}>
       {pieces.map((piece, i) => (

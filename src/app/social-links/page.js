@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Instagram, Twitter, Youtube,} from '@icons-pack/react-simple-icons';
+import { link,} from '@icons-pack/react-simple-icons';
 import { ArrowLeft, Music2, Globe,} from 'lucide-react'
 import PageLoader from '@/components/PageLoader'
 

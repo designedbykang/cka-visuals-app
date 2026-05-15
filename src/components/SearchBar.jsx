@@ -31,7 +31,7 @@ function FilterButton({ onToggle, hasActive, theme }) {
         border: 'none',
         borderRight: `1px solid ${theme === 'dark'
           ? 'rgba(97,222,44,0.2)'
-          : 'rgba(110,1,240,0.2)'}`,
+          : '#E4E4E7'}`,
         cursor: 'pointer',
         flexShrink: 0,
         transition: 'all 0.2s ease',
@@ -59,7 +59,7 @@ function SearchIconButton({ theme }) {
         border: 'none',
         borderLeft: `1px solid ${theme === 'dark'
           ? 'rgba(97,222,44,0.2)'
-          : 'rgba(110,1,240,0.2)'}`,
+          : '#E4E4E7'}`,
         cursor: 'pointer',
         flexShrink: 0,
         borderRadius: '0 14px 14px 0',
@@ -82,7 +82,7 @@ function FilterDropdown({ active, onSelect, theme }) {
       left: 0,
       right: 0,
       background: isDark ? '#1A1A1A' : '#F3F3F3',
-      border: `1px solid ${isDark ? 'rgba(97,222,44,0.2)' : 'rgba(110,1,240,0.2)'}`,
+      border: `1px solid ${isDark ? 'rgba(97,222,44,0.2)' : '#E4E4E7'}`,
       borderRadius: '16px',
       padding: '20px',
       zIndex: 40,
@@ -91,7 +91,7 @@ function FilterDropdown({ active, onSelect, theme }) {
       gap: '20px',
       boxShadow: isDark
         ? '0 8px 32px rgba(0,0,0,0.4)'
-        : '0 8px 32px rgba(110,1,240,0.1)',
+        : '0 8px 32px rgba(18,15,15,0.08)',
     }}>
       {Object.entries(FILTERS).map(([group, options]) => (
         <div key={group}>
@@ -120,12 +120,12 @@ function FilterDropdown({ active, onSelect, theme }) {
                       ? '#6E01F0'
                       : isDark
                         ? 'rgba(243,243,243,0.06)'
-                        : 'rgba(110,1,240,0.06)',
+                        : '#F7F7F8',
                     border: `1px solid ${isActive
                       ? '#61DE2C'
                       : isDark
                         ? 'rgba(243,243,243,0.1)'
-                        : 'rgba(110,1,240,0.15)'}`,
+                        : '#E4E4E7'}`,
                     color: isActive
                       ? '#F3F3F3'
                       : isDark
@@ -212,8 +212,10 @@ export default function SearchBar() {
         setDisplayText(current.slice(0, displayText.length - 1))
       }, 35)
     } else if (isDeleting && displayText.length === 0) {
-      setIsDeleting(false)
-      setPlaceholderIndex(i => (i + 1) % PLACEHOLDERS.length)
+      timeout = setTimeout(() => {
+        setIsDeleting(false)
+        setPlaceholderIndex(i => (i + 1) % PLACEHOLDERS.length)
+      }, 0)
     }
 
     return () => clearTimeout(timeout)
@@ -246,11 +248,11 @@ export default function SearchBar() {
             ? '#6E01F0'
             : isDark
               ? 'rgba(97,222,44,0.4)'
-              : 'rgba(110,1,240,0.3)'}`,
+              : '#E4E4E7'}`,
         background: isDark
           ? 'rgba(243,243,243,0.04)'
-          : 'rgba(110,1,240,0.03)',
-        transition: 'border-color 0.2s ease',
+          : '#F7F7F8',
+        transition: 'border-color 0.2s ease, background 0.2s ease',
         overflow: 'hidden',
       }}>
 

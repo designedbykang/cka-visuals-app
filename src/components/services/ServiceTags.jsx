@@ -2,69 +2,137 @@
 
 import { useServicesContext } from '@/context/ServicesContext'
 
-export default function ServiceTags({ tags }) {
+export default function ServiceTags({ tags, instructions }) {
   const { activeTagId, setActiveTagId } = useServicesContext()
-
-  if (!tags || tags.length === 0) return null
 
   return (
     <div style={{
-      display: 'flex',
-      gap: '8px',
-      padding: '0 20px',
-      overflowX: 'auto',
-      scrollbarWidth: 'none',
-      msOverflowStyle: 'none',
+      background: '#080809',
+      paddingBottom: '12px',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
     }}>
-      <button
-        onClick={() => setActiveTagId(null)}
-        style={{
-          height: '32px',
-          padding: '0 14px',
-          borderRadius: '20px',
-          border: activeTagId === null
-            ? '1px solid #6E01F0'
-            : '1px solid var(--bg-card-border)',
-          background: activeTagId === null ? '#6E01F0' : 'var(--bg-card)',
-          color: activeTagId === null ? '#F3F3F3' : 'var(--text-secondary)',
-          fontSize: '12px',
-          fontWeight: '500',
+      {/* Instructions line */}
+      {instructions && (
+        <p style={{
+          color: 'rgba(243,243,243,0.5)',
+          fontSize: '13px',
+          fontWeight: '400',
           fontFamily: 'Inter, sans-serif',
-          cursor: 'pointer',
-          flexShrink: 0,
-          whiteSpace: 'nowrap',
-          transition: 'all 0.15s ease',
-        }}
-      >
-        All
-      </button>
-      {tags.map(tag => {
-        const active = tag.id === activeTagId
-        return (
+          margin: 0,
+          padding: '10px 20px 8px',
+        }}>
+          {instructions}
+        </p>
+      )}
+
+      {/* Tag pills row */}
+      {tags && tags.length > 0 && (
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '0 20px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}>
+          {/* All pill */}
           <button
-            key={tag.id}
-            onClick={() => setActiveTagId(active ? null : tag.id)}
+            onClick={() => setActiveTagId(null)}
             style={{
-              height: '32px',
-              padding: '0 14px',
-              borderRadius: '20px',
-              border: active ? '1px solid #6E01F0' : '1px solid var(--bg-card-border)',
-              background: active ? '#6E01F0' : 'var(--bg-card)',
-              color: active ? '#F3F3F3' : 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              height: '36px',
+              padding: '0 16px',
+              borderRadius: '100px',
+              border: activeTagId === null
+                ? '1.5px solid #F3F3F3'
+                : '1.5px solid rgba(243,243,243,0.2)',
+              background: activeTagId === null
+                ? 'rgba(243,243,243,0.12)'
+                : 'transparent',
+              color: activeTagId === null
+                ? '#F3F3F3'
+                : 'rgba(243,243,243,0.45)',
               fontSize: '12px',
-              fontWeight: '500',
+              fontWeight: '600',
               fontFamily: 'Inter, sans-serif',
+              letterSpacing: '0.8px',
               cursor: 'pointer',
               flexShrink: 0,
               whiteSpace: 'nowrap',
               transition: 'all 0.15s ease',
-              textTransform: 'capitalize',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
-            {tag.label}
+            {/* Circle indicator */}
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: activeTagId === null
+                ? '#F3F3F3'
+                : 'transparent',
+              border: activeTagId === null
+                ? 'none'
+                : '1.5px solid rgba(243,243,243,0.4)',
+              flexShrink: 0,
+              transition: 'all 0.15s ease',
+            }} />
+            ALL
           </button>
-        )
-      })}
+
+          {tags.map(tag => {
+            const active = tag.id === activeTagId
+            return (
+              <button
+                key={tag.id}
+                onClick={() => setActiveTagId(active ? null : tag.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  height: '36px',
+                  padding: '0 16px',
+                  borderRadius: '100px',
+                  border: active
+                    ? '1.5px solid #F3F3F3'
+                    : '1.5px solid rgba(243,243,243,0.2)',
+                  background: active
+                    ? 'rgba(243,243,243,0.12)'
+                    : 'transparent',
+                  color: active
+                    ? '#F3F3F3'
+                    : 'rgba(243,243,243,0.45)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  fontFamily: 'Inter, sans-serif',
+                  letterSpacing: '0.8px',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.15s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: active ? '#F3F3F3' : 'transparent',
+                  border: active
+                    ? 'none'
+                    : '1.5px solid rgba(243,243,243,0.4)',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease',
+                }} />
+                {tag.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,276 +1,443 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, BookOpen, Clock, FileText, RefreshCw, Layers } from 'lucide-react'
 import { useService } from '@/app/hooks/useService'
-import ServiceHero from '@/components/services/ServiceHero'
-import PackageSelector from '@/components/services/PackageSelector'
-import DeliverablesList from '@/components/services/DeliverablesList'
-import EnquirySheet from '@/components/services/EnquirySheet'
 import { useServicesContext } from '@/context/ServicesContext'
+import { Check } from 'lucide-react'
 
-function AvailabilityBadge({ available }) {
-  const isAvailable = available !== false
+// Placeholder description slides until description_slides field exists in DB
+const LOREM_SLIDES = [
+  'Nulla quam. Aenean fermentum, turpis sed volutpat dignissim, diam risus facilisis nibh, sit amet iaculis est turpis non tellus.',
+  'Curabitur felis erat, tempus eu, placerat et, pellentesque sed, purus. Sed sed diam. Nam nunc.',
+  'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos.',
+]
+
+function HeroCarousel({ imageUrl, serviceName }) {
+  const [index, setIndex] = useState(0)
+  const touchStartX = useRef(null)
+
+  // For now single image — structure ready for multiple
+  const images = imageUrl ? [imageUrl] : []
+
+  const handleTouchStart = e => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = e => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) < 40) return
+    if (delta > 0 && index < images.length - 1) setIndex(i => i + 1)
+    if (delta < 0 && index > 0) setIndex(i => i - 1)
+    touchStartX.current = null
+  }
+
   return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-      padding: '6px 12px',
-      borderRadius: '20px',
-      background: isAvailable ? 'rgba(97,222,44,0.1)' : 'rgba(255,255,255,0.06)',
-      border: `1px solid ${isAvailable ? 'rgba(97,222,44,0.25)' : 'rgba(255,255,255,0.1)'}`,
-      alignSelf: 'flex-start',
-    }}>
-      <div style={{
-        width: '6px',
-        height: '6px',
-        borderRadius: '50%',
-        background: isAvailable ? '#61DE2C' : 'rgba(255,255,255,0.3)',
-        flexShrink: 0,
-      }} />
-      <span style={{
-        color: isAvailable ? '#61DE2C' : 'rgba(243,243,243,0.4)',
-        fontSize: '12px',
-        fontWeight: '600',
-        fontFamily: 'Inter, sans-serif',
-        letterSpacing: '0.2px',
-      }}>
-        {isAvailable ? 'Available now' : 'Fully booked'}
-      </span>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background: '#1A1A2E',
+        position: 'relative',
+      }}
+    >
+      {images.length > 0 ? (
+        <img
+          src={images[index]}
+          alt={serviceName}
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            display: 'block',
+          }}
+        />
+      ) : (
+        // Placeholder gradient when no image
+        <div style={{
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(135deg, rgba(110,1,240,0.4) 0%, rgba(51,208,194,0.2) 100%)',
+        }} />
+      )}
     </div>
   )
 }
 
-function DetailFact({ icon: Icon, label, value }) {
+function DescriptionCarousel({ slides }) {
+  const [index, setIndex] = useState(0)
+  const touchStartX = useRef(null)
+
+  const handleTouchStart = e => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = e => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) < 40) return
+    if (delta > 0 && index < slides.length - 1) setIndex(i => i + 1)
+    if (delta < 0 && index > 0) setIndex(i => i - 1)
+    touchStartX.current = null
+  }
+
   return (
-    <div style={{
-      padding: '14px',
-      borderRadius: '14px',
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+      {/* Slide text */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          padding: '0 24px',
+          minHeight: '120px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <p style={{
+          color: 'rgba(243,243,243,0.65)',
+          fontSize: '15px',
+          fontWeight: '400',
+          fontFamily: 'Inter, sans-serif',
+          lineHeight: '1.7',
+          textAlign: 'center',
+          margin: 0,
+          transition: 'opacity 0.2s ease',
+        }}>
+          {slides[index]}
+        </p>
+      </div>
+
+      {/* Dots */}
+      {slides.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              style={{
+                width: i === index ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: i === index
+                  ? '#F3F3F3'
+                  : 'transparent',
+                border: i === index
+                  ? 'none'
+                  : '1.5px solid rgba(243,243,243,0.3)',
+                padding: 0,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PackageBox({ pkg, selected, onSelect }) {
+  return (
+    <div
+      onClick={() => onSelect(pkg)}
+      style={{
+        position: 'relative',
+        borderRadius: '16px',
+        border: selected
+          ? '1.5px solid #33D0C2'
+          : '1.5px solid rgba(255,255,255,0.1)',
+        background: '#1A1A28',
+        padding: '20px 20px 20px 20px',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s ease',
+        marginTop: '16px',
+      }}
+    >
+      {/* PRICE badge — overlapping top-left */}
       <div style={{
-        width: '28px',
-        height: '28px',
-        borderRadius: '8px',
-        background: 'rgba(110,1,240,0.15)',
+        position: 'absolute',
+        top: '-14px',
+        left: '16px',
+        background: '#6E01F0',
+        borderRadius: '20px',
+        padding: '4px 14px',
+        zIndex: 1,
+      }}>
+        <span style={{
+          color: '#F3F3F3',
+          fontSize: '10px',
+          fontWeight: '700',
+          fontFamily: 'Inter, sans-serif',
+          letterSpacing: '1.5px',
+          textTransform: 'uppercase',
+        }}>
+          PRICE
+        </span>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Price */}
+          <span style={{
+            color: '#F3F3F3',
+            fontSize: '26px',
+            fontWeight: '800',
+            fontFamily: 'Inter, sans-serif',
+            letterSpacing: '-0.5px',
+            lineHeight: '1',
+          }}>
+            {pkg.price?.toLocaleString()} {pkg.currency || 'XAF'}
+          </span>
+
+          {/* Package name */}
+          <span style={{
+            color: 'rgba(243,243,243,0.5)',
+            fontSize: '13px',
+            fontWeight: '500',
+            fontFamily: 'Inter, sans-serif',
+          }}>
+            {pkg.name}
+          </span>
+
+          {/* Delivery */}
+          {pkg.delivery_time && (
+            <span style={{
+              color: 'rgba(243,243,243,0.4)',
+              fontSize: '12px',
+              fontFamily: 'Inter, sans-serif',
+              marginTop: '2px',
+            }}>
+              Delivered {pkg.delivery_time}
+            </span>
+          )}
+        </div>
+
+        {/* Checkmark */}
+        <div style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          background: selected ? 'rgba(51,208,194,0.15)' : 'transparent',
+          border: selected
+            ? '1.5px solid #33D0C2'
+            : '1.5px solid rgba(255,255,255,0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          transition: 'all 0.15s ease',
+        }}>
+          {selected && <Check size={14} color="#33D0C2" strokeWidth={2.5} />}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ServiceDetailPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const { service, packages, loading } = useService(id)
+  const { selectedPackageId, setSelectedPackageId, openContactPopup } = useServicesContext()
+
+  const selectedPackage = packages.find(p => p.id === selectedPackageId)
+    || packages[0]
+    || null
+
+  // Auto-select first package on load
+  if (packages.length > 0 && !selectedPackageId) {
+    setSelectedPackageId(packages[0].id)
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100dvh',
+        background: '#080809',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <Icon size={14} color="#9E56F5" strokeWidth={2} />
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <span style={{ color: 'rgba(243,243,243,0.35)', fontSize: '11px', fontFamily: 'Inter, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-          {label}
-        </span>
-        <span style={{ color: '#F3F3F3', fontSize: '14px', fontFamily: 'Inter, sans-serif', fontWeight: '600' }}>
-          {value}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-export default function ServicePage() {
-  const { id } = useParams()
-  const router = useRouter()
-  const { service, packages, deliverables, loading } = useService(id)
-  const { selectedPackageId, setSelectedPackageId } = useServicesContext()
-  const [enquiryOpen, setEnquiryOpen] = useState(false)
-
-  const selectedPackage = packages.find(p => p.id === selectedPackageId) || null
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100dvh', background: '#080809', padding: '60px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} style={{ height: i === 1 ? '240px' : '80px', borderRadius: '16px', background: 'rgba(255,255,255,0.04)' }} />
-        ))}
+        <div style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          border: '2px solid rgba(243,243,243,0.1)',
+          borderTop: '2px solid #6E01F0',
+          animation: 'spin 0.8s linear infinite',
+        }} />
       </div>
     )
   }
 
   if (!service) return null
 
-  const facts = [
-    { icon: Clock, label: 'Turnaround', value: service.turnaround || 'On request' },
-    { icon: FileText, label: 'Format', value: service.format || 'Digital' },
-    { icon: RefreshCw, label: 'Revisions', value: service.revisions != null ? `${service.revisions} rounds` : 'Discussed' },
-    { icon: Layers, label: 'Packages', value: `${packages.length} option${packages.length !== 1 ? 's' : ''}` },
-  ]
-
   return (
-    <div style={{ minHeight: '100dvh', background: '#080809' }}>
-      {/* Back nav */}
+    <div style={{
+      minHeight: '100dvh',
+      background: '#080809',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+
+      {/* Top band — service name */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '56px 20px 20px',
-        position: 'sticky',
-        top: 0,
-        background: 'rgba(8,8,9,0.92)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 10,
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: '#6E01F0',
+        padding: '52px 20px 16px',
+        textAlign: 'center',
+        flexShrink: 0,
       }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: 'rgba(243,243,243,0.6)',
-          }}
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <span style={{ color: 'rgba(243,243,243,0.4)', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-          Services
-        </span>
+        <h1 style={{
+          color: '#F3F3F3',
+          fontSize: '22px',
+          fontWeight: '900',
+          fontFamily: 'Inter, sans-serif',
+          margin: 0,
+          letterSpacing: '2px',
+          textTransform: 'uppercase',
+        }}>
+          {service.name}
+        </h1>
       </div>
 
-      <div style={{ padding: '24px 20px 120px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        <ServiceHero imageUrl={service.hero_image_url} serviceName={service.name} height="260px" />
+      {/* Hero image zone */}
+      <div style={{
+        width: '100%',
+        height: '38vh',
+        flexShrink: 0,
+        background: '#fff',
+      }}>
+        <HeroCarousel
+          imageUrl={service.hero_image_url}
+          serviceName={service.name}
+        />
+      </div>
 
-        {/* Name, availability, tagline */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <AvailabilityBadge available={service.is_available} />
-          <h1 style={{
+      {/* Content zone */}
+      <div style={{
+        flex: 1,
+        background: '#0D0D10',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingBottom: '40px',
+      }}>
+
+        {/* Headline */}
+        <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
+          <h2 style={{
             color: '#F3F3F3',
-            fontSize: '28px',
-            fontWeight: '800',
+            fontSize: '22px',
+            fontWeight: '700',
             fontFamily: 'Inter, sans-serif',
             margin: 0,
-            letterSpacing: '-0.5px',
-            lineHeight: '1.2',
+            lineHeight: '1.3',
+            letterSpacing: '-0.2px',
           }}>
-            {service.name}
-          </h1>
-          {service.tagline && (
-            <p style={{
-              color: 'rgba(243,243,243,0.45)',
-              fontSize: '15px',
-              fontFamily: 'Inter, sans-serif',
-              margin: 0,
-              lineHeight: '1.65',
-            }}>
-              {service.tagline}
-            </p>
+            {service.tagline || 'Nulla quam. Aenean fermentum'}
+          </h2>
+        </div>
+
+        {/* Description carousel */}
+        <div style={{ paddingTop: '20px' }}>
+          <DescriptionCarousel slides={LOREM_SLIDES} />
+        </div>
+
+        {/* Package boxes */}
+        <div style={{ padding: '8px 20px 0' }}>
+          {packages.length > 0 ? (
+            packages.map(pkg => (
+              <PackageBox
+                key={pkg.id}
+                pkg={pkg}
+                selected={selectedPackage?.id === pkg.id}
+                onSelect={p => setSelectedPackageId(p.id)}
+              />
+            ))
+          ) : (
+            // Placeholder packages when DB is empty
+            [
+              { id: 'a', name: 'New Logo', price: 60, currency: 'USD', delivery_time: 'Within 24hrs' },
+              { id: 'b', name: 'Logo Redesign', price: 40, currency: 'USD', delivery_time: 'Within 24hrs' },
+            ].map(pkg => (
+              <PackageBox
+                key={pkg.id}
+                pkg={pkg}
+                selected={selectedPackage?.id === pkg.id}
+                onSelect={p => setSelectedPackageId(p.id)}
+              />
+            ))
           )}
         </div>
 
-        {/* Detail facts grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          {facts.map(f => <DetailFact key={f.label} {...f} />)}
-        </div>
-
-        {/* Deep dive link */}
-        {service.literature && (
-          <Link
-            href={`/services/${id}/learn-more`}
+        {/* BUY NOW button */}
+        <div style={{ padding: '28px 20px 0' }}>
+          <button
+            onClick={() => selectedPackage && openContactPopup()}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '16px',
+              width: '100%',
+              padding: '18px',
               borderRadius: '16px',
-              background: 'rgba(110,1,240,0.07)',
-              border: '1px solid rgba(110,1,240,0.18)',
-              textDecoration: 'none',
+              background: 'linear-gradient(90deg, #6E01F0 0%, #33D0C2 100%)',
+              border: 'none',
+              color: '#F3F3F3',
+              fontSize: '16px',
+              fontWeight: '900',
+              fontFamily: 'Inter, sans-serif',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(110,1,240,0.35)',
+              transition: 'opacity 0.15s ease',
+              WebkitTapHighlightColor: 'transparent',
             }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '10px',
-              background: 'rgba(110,1,240,0.18)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <BookOpen size={16} color="#9E56F5" />
-            </div>
-            <div>
-              <p style={{ color: '#F3F3F3', fontSize: '14px', fontWeight: '600', fontFamily: 'Inter, sans-serif', margin: 0 }}>
-                The full approach
-              </p>
-              <p style={{ color: 'rgba(158,86,245,0.7)', fontSize: '12px', fontFamily: 'Inter, sans-serif', margin: '2px 0 0' }}>
-                Literature & deliverables →
-              </p>
-            </div>
-          </Link>
-        )}
+            Buy Now
+          </button>
 
-        <PackageSelector
-          packages={packages}
-          selectedId={selectedPackageId}
-          onSelect={pkg => setSelectedPackageId(pkg.id)}
-        />
-
-        {deliverables.length > 0 && (
-          <DeliverablesList deliverables={deliverables} />
-        )}
-      </div>
-
-      {/* Persistent bottom bar */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '12px 20px 36px',
-        background: 'linear-gradient(to top, #080809 55%, rgba(8,8,9,0))',
-        zIndex: 10,
-      }}>
-        {selectedPackage && (
+          {/* Assurance line */}
           <p style={{
             color: 'rgba(243,243,243,0.35)',
             fontSize: '12px',
             fontFamily: 'Inter, sans-serif',
-            margin: '0 0 8px',
             textAlign: 'center',
+            margin: '14px 0 0',
+            lineHeight: '1.6',
           }}>
-            {selectedPackage.name} · {selectedPackage.price?.toLocaleString()} {selectedPackage.currency}
+            Lorem ipsum dolor sit amet consectetur.{' '}
+            <span
+              onClick={() => router.push(`/services/${id}/learn-more`)}
+              style={{
+                color: 'rgba(158,86,245,0.8)',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              }}
+            >
+              Learn more about this service
+            </span>
           </p>
-        )}
-        <button
-          onClick={() => selectedPackage && setEnquiryOpen(true)}
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '16px',
-            background: selectedPackage
-              ? 'linear-gradient(135deg, #FF1FB8 0%, #9E56F5 100%)'
-              : 'rgba(255,255,255,0.06)',
-            border: selectedPackage ? 'none' : '1px solid rgba(255,255,255,0.09)',
-            color: selectedPackage ? '#F3F3F3' : 'rgba(255,255,255,0.22)',
-            fontSize: '16px',
-            fontWeight: '700',
-            fontFamily: 'Inter, sans-serif',
-            cursor: selectedPackage ? 'pointer' : 'default',
-            transition: 'opacity 0.15s ease',
-            boxShadow: selectedPackage ? '0 4px 28px rgba(255,31,184,0.28)' : 'none',
-            letterSpacing: '0.1px',
-          }}
-          onMouseEnter={e => { if (selectedPackage) e.currentTarget.style.opacity = '0.9' }}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-        >
-          {selectedPackage ? 'PAY' : 'Select a package to continue'}
-        </button>
-      </div>
+        </div>
 
-      {enquiryOpen && selectedPackage && (
-        <EnquirySheet
-          service={service}
-          selectedPackage={selectedPackage}
-          onClose={() => setEnquiryOpen(false)}
-        />
-      )}
+      </div>
     </div>
   )
 }

@@ -3,29 +3,56 @@ import { supabase } from '@/lib/supabase'
 
 export function useCategoryServices(categoryId) {
   const [services, setServices] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!categoryId) return
+    let cancelled = false
+
+    if (!categoryId) {
+      return
+    }
 
     const fetch = async () => {
       setLoading(true)
-      const { data } = await supabase
-        .from('services')
-        .select(`
-          *,
-          service_tag_assignments(tag_id),
-          service_packages(price, currency)
-        `)
-        .eq('category_id', categoryId)
-        .eq('is_visible', true)
-        .order('order_index', { ascending: true })
+      setError(null)
 
-      setServices(data || [])
-      setLoading(false)
+      try {
+        const { data, error } = await supabase
+          .from('services')
+          .select(`
+            *,
+            service_tag_assignments(tag_id),
+            service_packages(price, currency)
+          `)
+          .eq('category_id', categoryId)
+          .eq('is_visible', true)
+          .order('order_index', { ascending: true })
+
+        if (cancelled) return
+
+        if (error) {
+          setError(error)
+          setServices([])
+        } else {
+          setServices(data || [])
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err)
+          setServices([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
+
     fetch()
+
+    return () => {
+      cancelled = true
+    }
   }, [categoryId])
 
-  return { services, loading }
+  return { services, loading, error }
 }

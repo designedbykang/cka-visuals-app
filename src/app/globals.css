@@ -15,6 +15,7 @@
   --color-cka-highlight:  #61DE2C;
   --color-cka-white:      #F3F3F3;
   --color-cka-black:      #120F0F;
+  --color-cka-teal: #33D0C2;
   --font-sans: 'Inter', sans-serif;
 }
 
@@ -36,17 +37,29 @@ img, video {
   user-select: none;
   pointer-events: none;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* Light mode tokens */
 [data-theme='light'] {
-  --bg-primary: #F3F3F3;
+  --bg-primary: #FFFFFF;
   --bg-secondary: #E5FADC;
-  --bg-card: rgba(0, 0, 0, 0.04);
-  --bg-card-border: rgba(0, 0, 0, 0.08);
+  --bg-card: #F7F7F8;
+  --bg-card-border: #E4E4E7;
   --text-primary: #120F0F;
   --text-secondary: rgba(18, 15, 15, 0.6);
   --header-bg: #6E01F0;
-  --search-bg: rgba(0, 0, 0, 0.06);
-  --search-border: rgba(0, 0, 0, 0.1);
+  --search-bg: #F7F7F8;
+  --search-border: #E4E4E7;
 }
 /* Dark mode tokens */
 [data-theme='dark'] {
@@ -94,4 +107,12 @@ body {
     opacity: 0;
   }
 }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}

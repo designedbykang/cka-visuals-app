@@ -8,7 +8,6 @@ import { Plus } from 'lucide-react'
 import { Download, Share2, Bookmark, MessageCircle } from 'lucide-react'
 import StoryViewer from './StoryViewer'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 
 function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
   const handleShare = async () => {
@@ -113,22 +112,11 @@ function ActionBar({ story, bookmarked, setBookmarked, onAction }) {
   )
 }
 
-function DailyStatus({ theme, onClick, hasUnseen, onSaved, bookmarks, setBookmarks }) {
+function DailyStatus({ theme, stories, onClick, hasUnseen, onSaved, bookmarks, setBookmarks }) {
   const isDark = theme === 'dark'
-  const [stories, setStories] = useState([])
   const [showPeek, setShowPeek] = useState(false)
   const currentStory = stories[0]
   const peekStory = stories[1]
-
-useEffect(() => {
-  supabase
-    .from('daily_status')
-    .select('id, media_url, media_type, caption')
-    .eq('is_active', true)
-    .order('sequence_order', { ascending: true })
-    .limit(2)
-    .then(({ data }) => { if (data?.length) setStories(data) })
-}, [])
 
   useEffect(() => {
     if (!peekStory) return
@@ -414,7 +402,7 @@ function FloatingChat() {
   )
 }
 
-export default function Bento() {
+export default function Bento({ stories = [] }) {
   const { theme } = useTheme()
   const [isMobile, setIsMobile] = useState(true)
   const [storyOpen, setStoryOpen] = useState(false)
@@ -524,6 +512,7 @@ export default function Bento() {
           <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
           <DailyStatus
   theme={theme}
+  stories={stories}
   onClick={handleOpenStory}
   hasUnseen={hasUnseen}
   onSaved={setToast}
@@ -601,6 +590,7 @@ export default function Bento() {
         <div style={{ flex: '0 0 55%', minHeight: 0, position: 'relative' }}>
         <DailyStatus
   theme={theme}
+  stories={stories}
   onClick={handleOpenStory}
   hasUnseen={hasUnseen}
   onSaved={setToast}

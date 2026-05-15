@@ -1,44 +1,38 @@
-'use client'
+import { notFound } from 'next/navigation'
+import { createServerClient } from '@/lib/supabase-server'
+import ImmersivePageClient from './ImmersivePageClient'
 
-import { useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { usePortfolioContext } from '@/context/PortfolioContext'
-import { usePortfolioCategories } from '@/hooks/usePortfolioCategories'
-import { usePiece } from '@/hooks/usePiece'
-import ImmersiveViewer from '@/components/portfolio/ImmersiveViewer'
-import CategoryOverlay from '@/components/portfolio/CategoryOverlay'
-import MenuOverlay from '@/components/portfolio/MenuOverlay'
-import ContactOverlay from '@/components/portfolio/ContactOverlay'
-import PageLoader from '@/components/PageLoader'
+export const revalidate = 86400
 
-export default function ImmersivePage() {
-  const { category, id } = useParams()
-  const { categories } = usePortfolioCategories()
-  const { piece, loading } = usePiece(id)
-  const { openPiece, openCategory, activeCategoryId } = usePortfolioContext()
+export async function generateStaticParams() {
+  const supabase = createServerClient()
+  const [{ data: pieces }, { data: categories }] = await Promise.all([
+    supabase.from('portfolio_pieces').select('id, category_id').eq('is_visible', true),
+    supabase.from('categories').select('id, slug').eq('is_visible', true),
+  ])
+  const categoryMap = Object.fromEntries((categories ?? []).map(c => [c.id, c.slug]))
+  return (pieces ?? []).map(p => ({
+    category: categoryMap[p.category_id] ?? 'unknown',
+    id: String(p.id),
+  }))
+}
 
-  // Restore context if user landed directly on this URL
-  useEffect(() => {
-    if (piece && !activeCategoryId) {
-      const cat = categories.find(c => c.slug === category)
-      if (cat) openCategory(cat.id, cat.slug)
-      openPiece(piece)
-    }
-  }, [piece, categories, category, activeCategoryId, openCategory, openPiece])
+export default async function ImmersivePage({ params }) {
+  const { category, id } = await params
+  const supabase = createServerClient()
 
-  if (loading || !piece) return <PageLoader />
+  const [{ data: piece }, { data: cat }] = await Promise.all([
+    supabase.from('portfolio_pieces').select('*').eq('id', id).single(),
+    supabase.from('categories').select('id, slug').eq('slug', category).single(),
+  ])
 
-  const cat = categories.find(c => c.slug === category)
+  if (!piece) notFound()
 
   return (
-    <>
-      <ImmersiveViewer
-        initialPieceId={id}
-        categoryId={cat?.id || piece.category_id}
-      />
-      <CategoryOverlay />
-      <MenuOverlay />
-      <ContactOverlay />
-    </>
+    <ImmersivePageClient
+      piece={piece}
+      categoryId={cat?.id ?? piece.category_id}
+      categorySlug={cat?.slug ?? category}
+    />
   )
 }

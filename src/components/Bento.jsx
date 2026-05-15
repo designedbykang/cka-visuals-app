@@ -290,6 +290,9 @@ useEffect(() => {
 
 const CARD_LINKS = {
   Services: '/services',
+  Portfolio: '/portfolio',
+  Content: '/blog',
+  Portal: '/portal',
 }
 
 
